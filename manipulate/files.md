@@ -79,7 +79,7 @@ ansible sw -i inventory.ini -m file -a 'path=/opt/testmyfile state=touch
 ```shell
 ansible sw -i inventory.ini -m file -a 'path=/opt/testmyfile owner=nobody group=nobody mode=u+x state=file'
 ```
-3. 在目标服务器上创建一个链接文件，软链接文件名为softlinkfile，执行命令时候，/opt/testmyfile是存在的
+3. 在目标服务器上创建一个软链接文件，软链接文件名为softlinkfile，执行命令时候，/opt/testmyfile是存在的
 ```shell
 ansible sw -i inventory.ini -m file -a 'src=/opt/testmyfile path=/opt/softlinkfile state=link'
 
@@ -87,6 +87,138 @@ ansible sw -i inventory.ini -m file -a 'src=/opt/testmyfile path=/opt/softlinkfi
 -rwxr--r-- 1 nobody nobody    0 May 19 15:05 testmyfile
 lrwxrwxrwx 1 root   root     15 May 19 15:18 softlinkfile -> /opt/testmyfile
 ```
-4. 
-5. b
-6. c
+4. 在目标服务器上创建一个硬链接文件，软链接文件名为hardlinkfile，执行命令时候，/opt/testmyfile是存在的
+```shell
+ansible sw -i inventory.ini -m file -a 'src=/opt/testmyfile path=/opt/hardlinkfile state=hard'
+```
+5. 在目标服务器上创建链接文件，如果源文件不存在或者是与其他文件同名时，强行覆盖
+```shell
+ansible sw -i inventory.ini -m file -a 'path=/opt/hardlinkfile state=link force=yes'
+```
+6. 修改目标服务器的文件权限0755、属组、属主为nobody
+
+```shell
+ansible sw -i inventory.ini -m file -a 'path=/opt/touchfile state=touch owner=nobody group=nobody mode=u+x'
+```
+
+### blockinfile
+
+> 表示在指定的文件中插入一段标记过的文本， 我们在这段文件中做了一些记号，以便日后通过标记找到文本，可以修改、删除它
+
+**参数**
+1. path 要操作的文件路径, *必须参数*
+2. block 指定我们要操作的那一段文本，这个参数也称为`content`
+3. marker、marker_begin、marker_end 这三个参数用于插入文本时的标记，默认情况下
+   1. marker的默认值是 "# {mark} ANSIBLE MANAGED BLOCK"
+   2. marker_begin的默认值是 "BEGIN"
+   3. marker_end的默认值是"END"
+   {mark}会被自动替换成 开始标记和结束标记中的`BEGIN`和`END`，通过插入段落文本，为不同段落添加不同的标记，**下次通过标记可以找到对应的段落**
+4. state block的状态，该值有两个参数，`present`和`absent`，默认值是`present`
+   1. 当值为`present`时，默认会更新对应的`block`的文本内容
+   2. 当值为`absent`时， 从文件中删除`block`中的文本内容
+
+下面两个参数涉及到插入文本的方式，默认会在文件末尾插入文本
+5. insertafter  指定将文本插入某一行的后面，使用参数指定对应的行；也可以使用python的正则表达式将文本插入到符合正则的行之后（若多行文本都被正则匹配，则以最后一个满足的为准），该参数还可以设置`EOF`, 表示将文本插入到文档末尾
+6. insertbefore 指定将文本插入某一行的前面，使用参数指定对应的行；也可以使用python的正则表达式将文本插入到符合正则的行之前（若多行文本都被正则匹配，则以最后一个满足的为准），该参数还可以设置`BOF`, 表示将文本插入到文档开头
+7. backup 是否需要在修改文件之前对其进行备份，默认值是不会备份的
+8. create 当操作的文件不存在时，是否创建对应的文件，默认值是不会创建的
+
+**使用场景**
+
+1. 测试环境之前，将测试文件/opt/rc.local准备一下，要在/opt/rc.local文件末尾添加两行
+
+`systemctl start mariadb`
+`systemctl start httpd`
+
+```shell
+ansible sw -i inventory.ini -m blockinfile -a 'path=/opt/rc.local block="systemctl start mariadb\nsystemctl start httpd"'
+
+可以看到插入内容后，文本文件的内容变成了
+
+# BEGIN ANSIBLE MANAGED BLOCK  
+systemctl start mariadb
+systemctl start httpd
+# END ANSIBLE MANAGED BLOCK
+```
+ BEGIN ANSIBLE MANAGED BLOCK  是开始标记
+ END ANSIBLE MANAGED BLOCK    是结束标记
+
+2. 在/opt/rc.local文件末尾添加两行，并修改标注的内容
+
+```shell
+ansible sw -i inventory.ini -m blockinfile -a 'path=/opt/rc.local block="hahaha\nhehehe" marker="#{mark} myself" '
+
+可以看到插入内容后，文本文件的内容变成了
+#BEGIN myself
+hahaha
+hehehe
+#END myself
+
+```
+3. 在/opt/rc.local文件末尾更新之前block的内容(这个是会按照marker的位置做修改的)，修改marker="#{mark} myself"的内容
+
+```shell
+ansible sw -i inventory.ini -m blockinfile -a 'path=/opt/rc.local block="NGINX" marker="#{mark} myself"'
+
+可以看到插入内容后，文本文件的内容变成了
+
+#BEGIN myself
+NGINX
+#END myself
+
+```
+
+4. 清理block中的文本内容
+```shell
+
+ansible sw -i inventory.ini -m blockinfile -a 'path=/opt/rc.local state=absent marker="#{mark} MARK1"'
+
+可以看到插入内容后，文本文件的内容连注释的标记和内容一起消失了
+
+```
+5. 将文本块插入到文档的开头，使用`insertbefore`参数，将其值设置为`BOF`
+
+```shell
+ansible sw -i inventory.ini -m blockinfile -a 'path=/opt/rc.local block="FIRST OF ALL" marker="#{mark} mybegin" insertbefore=BOF'
+
+可以看到插入内容后，文本文件的内容变成了
+
+#BEGIN mybegin
+FIRST OF ALL
+#END mybegin
+#!/bin/bash
+```
+
+6. 正则匹配touch这个字母，将文本内容叫alpha的插入这个touch字母之上
+
+```shell
+ansible sw -i inventory.ini -m blockinfile -a 'path=/opt/rc.local block="alpha" marker="#{mark}alphabeta" insertbefore="^touch"'
+
+可以看到插入内容后，文本文件的内容变成了
+
+#BEGINalphabeta
+alpha
+#ENDalphabeta
+touch /var/lock/subsys/local
+```
+
+7. 在/opt/rc.local.new里插入文本内容，如果文件不存在就创建文件
+
+```shell
+ansible sw -i inventory.ini -m blockinfile -a 'path=/opt/rc.local.new block="new bee" marker="#{mark} SWORD" create=yes backup=yes '
+
+可以看到插入内容后，文本文件的内容变成了
+
+#BEGIN SWORD
+new bee
+#END SWORD
+
+backup参数会在备份文件后添加时间戳
+-rw-r--r-- 1 root   root     32 May 19 19:21 rc.local.new.27142.2023-05-19@19:24:40~
+```
+
+
+8. 
+
+
+
