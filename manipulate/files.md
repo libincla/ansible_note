@@ -54,7 +54,7 @@
 1. path 必须参数，指定要操作的文件或者目录在远程主机的位置，为了兼容之前版本，使用`dest`或者`name`也可以
 2. state 灵活的参数
    1. 如果要创建的`path`是一个目录时，要将`state`设置为`directory`
-   2. 如果要创建的`path`是一个文件时，要将`state`设置为`file`/`touch`
+   2. 如果要创建的`path`是一个文件时，要将`state`设置为`file`/`touch`(touch当path文件不存在时，会创建，否则会**更新时间戳**，而file则不会，当path不存在时，报错)
    3. 如果要创建的`path`是一个软链接，要将`state`设置为`link`
    4. 如果要创建的`path`是一个硬链接，要将`state`设置为`hard`
    5. 如果要删除`path`， 要将`state`设置为`absent`（删除时不会区分文件、目录或者是链接）
@@ -67,3 +67,26 @@
 5. owner 修改`path`文件、目录的属主
 6. group 修改`path`文件、目录的属组
 7. mode 指定被操作文件的权限，（若要文件权限为rw-r--r--, 可以设置为mode=0644;或者通过权限位，比如mode=u+x)
+8. recurse 当操作的`path`为目录，将`recurse`设置为yes，会递归的修改目录中文件的属性
+
+**使用场景**
+
+1. 在目标服务器上创建一个文件，当文件不存在时创建
+```shell
+ansible sw -i inventory.ini -m file -a 'path=/opt/testmyfile state=touch
+```
+2. 在目标服务器上创建一个文件，并更新文件属组属主为nobody，加上执行权限
+```shell
+ansible sw -i inventory.ini -m file -a 'path=/opt/testmyfile owner=nobody group=nobody mode=u+x state=file'
+```
+3. 在目标服务器上创建一个链接文件，软链接文件名为softlinkfile，执行命令时候，/opt/testmyfile是存在的
+```shell
+ansible sw -i inventory.ini -m file -a 'src=/opt/testmyfile path=/opt/softlinkfile state=link'
+
+可以看到文件生成
+-rwxr--r-- 1 nobody nobody    0 May 19 15:05 testmyfile
+lrwxrwxrwx 1 root   root     15 May 19 15:18 softlinkfile -> /opt/testmyfile
+```
+4. 
+5. b
+6. c
