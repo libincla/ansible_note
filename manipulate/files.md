@@ -217,8 +217,111 @@ backup参数会在备份文件后添加时间戳
 -rw-r--r-- 1 root   root     32 May 19 19:21 rc.local.new.27142.2023-05-19@19:24:40~
 ```
 
+### lineinfile
 
-8. 
+> 确保 某一行文本 存在于指定的文本，或者确保文本从文件中删除， 或者通过正则表达式，替换 某一行文本
+
+**参数**
+1. path参数， 指定要操作的文件
+2. line参数， 指定文本内容
+3. regexp参数，使用**正则匹配**的对应行，若多行文本被匹配，只有最后匹配的文本会被替换；若在删除的场景下，多行文本被匹配，那么多行都会被删除
+4. state参数 该行是否应该存在
+   1. present 存在（默认是）
+   2. absent 删除(
+5. backrefs 参数 当正则匹配替换文本时，如果存在分组，可以通过设置backref=yes开启后向引用, 这样line参数就能对regexp参数中的分组进行后项引用(详见实例)
+   1. backrefs=yes还有一个功能，如果正则没有匹配到任何行，line对应的内容会被插入到文件的末尾，如果设置了backref=yes，当正则没有匹配到任何行时，不会对文件进行任何操作
+6. insertafter 通过insertafter参数将文本插入指定的行后 (如果使用backrefs，此参数忽略)
+   1. EOF（默认是文档的末尾）
+   2. *regex* 如果设置成正则表达式，表示将文本插入到匹配的正则的行之后，没有正则匹配到，则表示插入文档末尾
+7. insertbefore  通过insertafter参数将文本插入指定的行前 (如果使用backrefs，此参数忽略)
+   1. BOF（默认是文档的开头）
+   2. *regex* 如果设置成正则表达式，表示将文本插入到匹配的正则的行之前，没有正则匹配到，则表示插入文档末尾
+8. backup参数 修改文件之前是否对文件进行备份
+9. create参数 当操作的文件不存在，是否创建文件
 
 
+**使用场景**
 
+本次实验的文本内容如下
+
+```ini
+# comment
+Hello ansible,Hiiii
+redundant
+11112222
+redundant
+WTF
+```
+
+1. 确保指定的**一行文本**存在于文件中，若文本存在，不做任何操作；若不存在，默认在文件末尾插入这行文本 (若文件不存在，则创建这个文件)
+
+```shell
+ansible sw -i inventory.ini -m lineinfile -a 'path=/opt/testfile line="QQQ" '
+
+skywalking-ecs-p001.shL.vevor.net | CHANGED => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "backup": "",
+    "changed": true,
+    "msg": "line added"
+}
+skywalking-ecs-p002.shL.vevor.net | CHANGED => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "backup": "",
+    "changed": true,
+    "msg": "line added"
+}
+skywalking-ecs-p003.shL.vevor.net | CHANGED => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "backup": "",
+    "changed": true,
+    "msg": "line added"
+}
+
+```
+2. 使用正则表达式替换“某一行”，如果匹配不止一行，只有最后匹配的正则会被替换，替换内容会换成line参数指定的内容，如果没匹配上，line参数的内容会被添加到文件的最后一行
+
+```shell
+ansible sw -i inventory.ini -m lineinfile -a 'path=/opt/testfile regexp="^[a-z].*" line="Mozart" '
+
+```
+
+3. 使用正则表达式替换“某一行”， 使用正则匹配删除某个文件中以"#"开头的行
+
+```shell
+ansible sw -i inventory.ini -m lineinfile -a 'path=/opt/testfile regexp="^#" state=absent'
+```
+
+4. 使用正则表达式替换“某一行”， 如果匹配不止一行，只有最后的一个正则匹配的行会被替换，被替换的内容换成line参数后的内容，如果没有被正则匹配到， **不对文件进行任何操作(通过使用backrefs=yes)**
+
+```shell
+ansible sw -i inventory.ini -m lineinfile -a 'path=/opt/testfile regexp="^#" line="castlevania" backrefs=yes'
+```
+
+5. 使用正则表达式删除匹配的行
+
+```shell
+ ansible sw -i inventory.ini -m lineinfile -a 'path=/opt/testfile regexp="^re" state=absent'
+```
+
+---
+将文本内容替换为以下， 为了演示通过正则表达式匹配的后项引用
+
+```ini
+# comment
+Hello world Hello
+Hiiii world Hiiii
+Hello world Hiiii
+```
+
+
+6. 使用后项引用，通过正则表达式，把匹配到的文本内容替换为第一组匹配到的内容
+
+```shell
+ansible sw -i inventory.ini -m lineinfile -a 'path=/opt/testfile  regexp="(H.{4}) world (H.{4})" line="\1" backrefs=yes '
+```
