@@ -325,3 +325,143 @@ Hello world Hiiii
 ```shell
 ansible sw -i inventory.ini -m lineinfile -a 'path=/opt/testfile  regexp="(H.{4}) world (H.{4})" line="\1" backrefs=yes '
 ```
+
+
+---
+
+### find
+
+>  find模块帮我们在远程主机上查找到符合条件的文件
+
+**参数**
+1. paths: 指定在哪个目录中查找文件，可以指定多个路径，路径之间使用逗号隔开，此参数有别名，可以使用path或者name来替代paths
+2. recurse: 递归查找；默认情况下，只会在指定的目录中查找文件，加上这个参数后，ansible会递归的进入指定目录的子目录查找文件
+3. hidden: 是否查找隐藏文件，默认情况下，不会查找隐藏文件
+4. file_type: 顾名思义，就是要查找的文件类型
+   1. `any`
+   2. `directory`
+   3. `file` (默认是这个)
+   4. `link`
+5. pattern(patterns): 此参数指定要查找的文件名称，支持`shell`（通配符）或者正则表达式去匹配文件名称，若要使用`python`的正则表达式匹配文件名，将`use_regex`参数设置为`yes`
+6. use_regex: 默认情况下，find模块不会使用正则表达式解析`patterns`参数中对应的内容，当`use_regex`设置为`yes`时，使用`python`正则解析`patterns`参数中的表达式；否则的话，使用**通配符**来解析`patterns`
+   1. 设置为`false`，使用通配符查找（默认）
+   2. 设置为`true`，使用python的正则表达式
+7. contains: 与文件内容匹配的正则表达式或者模式(只有当file_type是文件的时候，生效)
+8. age: 根据时间范围查找文件，默认以文件的`mtime`与指定时间做对比
+   1. **这里的时间是指从当前时间往前后推三天**
+      1. 比如，查找`mtime`三天之前的文件，设置`age=3d`
+      2. 比如，查找`mtime`三天之内的文件，设置`age=-3d`
+   2. 单位支持 秒(s)、分(m)、时(h)、天(d)、星期(w)
+9.  age_stamp: 按照时间种类来查找时，时间种类
+    1.  atime
+    2.  ctime
+    3.  mtime
+10. size: 使用此参数可以根据文件大小查找文件 (单位支持，t,g,m,k,b)
+    1.  比如，查找大于3M的文件，设置`size=3m`
+    2.  比如，查找小于50k的文件，设置`size=-50k`
+11. get_checksum： 当符合查找条件的文件被找到时，返回文件的`sha1`校验码;若文件大小很大，生成校验码时间会长
+
+
+**使用场景**
+
+1. 在目标主机的某个目录下，查找文件内容中包含"Hello"字符串的文件，不包含隐藏文件
+
+```shell
+ansible sw -i inventory.ini -m find -a 'paths=/opt contains=".*Hello.*"'
+
+查找结果
+...
+     {
+            "atime": 1684739126.108184,
+            "ctime": 1684739123.7081478,
+            "dev": 64769,
+            "gid": 99,
+            ...
+            "mode": "0755",
+            "mtime": 1684739123.7081478,
+            "nlink": 1,
+            "path": "/opt/testfile",
+            "pw_name": "nobody",
+            ...
+            "xoth": true,
+            "xusr": true
+        }
+    ],
+    "matched": 2,
+    "msg": ""
+...
+```
+2. 在目标主机的某个目录下，**递归**查找文件内容中包含"Hello"字符串的文件，不包含隐藏文件
+
+```shell
+ansible sw -i inventory.ini -m find -a 'paths=/opt contains=".*Hello.*" recurse=yes '
+```
+
+3. 在目标主机上的某个目录下，查找以.log结尾的日志文件，包含隐藏文件，不去递归查找，不包含非file的其他文件格式
+
+```shell
+ansible sw -i inventory.ini -m find -a 'paths=/var/log patterns="*.log" hidden=yes'
+```
+4. 在目标主机上的某个目录下，查找以.conf结尾的日志文件，包含隐藏文件，包含所有文件类型，不去递归查找
+   
+```shell
+ansible sw -i inventory.ini -m find -a 'paths=/etc patterns="*.conf" file_type=any hidden=yes'
+
+```
+5. 在目标主机上的某个目录下，查找以.conf结尾的日志文件，包含隐藏文件，包含所有文件类型，不去递归查找(使用**正则表达式方式**查找)
+
+```shell
+ansible sw -i inventory.ini -m find -a 'paths=/etc patterns=".*\.conf" use_regex=yes file_type=any hidden=yes'
+```
+6. 在目标主机上的某个目录下，查找mtime在4天之内的log文件，不包含隐藏文件，不包含目录、软链接等文件类型
+
+```shell
+ansible sw -i inventory.ini -m find -a 'paths=/var/log patterns="*.log" age=-4d recurse=yes'
+```
+7. 在目标主机上的某个目录下，查找atime在2周内的文件，不包含隐藏文件、目录以及软链接
+
+```shell
+ansible sw -i inventory.ini -m find -a 'paths=/var/log age=-2w age_stamp=atime recurse=yes'
+```
+
+8. 在目标主机上的某个目录下，查找大于100m的文件，不包含隐藏文件、目录以及软链接的文件类型
+
+```shell
+ansible sw -i inventory.ini -m find -a 'paths=/var/log size=100m recurse=yes'
+```
+
+9. 在目标主机上的某个目录下，查找大于1m的日志，包含隐藏文件、递归查找并且返回符合条件的sha1码
+
+```shell
+ansible sw -i inventory.ini -m find -a  'paths=/var/log patterns="*.log" size=1m hidden=yes recurse=yes get_checksum=yes'
+```
+
+---
+
+### replace
+
+> 根据指定的正则表达式替换文本的字符串，**所有匹配到的字符串都会被替换**
+
+**参数**
+1. path: 必须，指定要操作的文件
+2. regexp: 必须，指定一个python正则表达式，匹配到的字符串会被替换
+3. replace: 指定要替换的字符串内容
+4. backup: 是否要在修改前备份文件
+   
+
+
+**使用场景**
+
+测试文本以`/etc/ssh/ssh_config`为主
+
+1. 将目标主机的文件中所有的`Host`字符串替换为`MyHOST`
+
+```shell
+ansible sw -i inventory.ini -m replace -a 'path=/opt/ssh_config regexp=".*Host.*" replace="MyHOST" '
+```
+2. 将目标主机的文件中所有的`Host`字符串替换为`MyHOST`， 进行备份
+   
+```shell
+ansible sw -i inventory.ini -m replace -a 'path=/opt/ssh_config regexp=".*Host.*" replace="MyHOST" backup=yes'
+```
+3. 
