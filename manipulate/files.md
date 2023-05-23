@@ -450,7 +450,9 @@ ansible sw -i inventory.ini -m find -a  'paths=/var/log patterns="*.log" size=1m
 5. after: 如果指定了，匹配之后文档才会被替换或者删除
    1. 使用python的正则表达式
    2. 如果使用启动`DOTALL`, `.`这个字符可以匹配任意的单个字符，包括换行符和回车符
-6. 
+6. before: 如果指定了，匹配之前文档才会被替换或者删除
+   1. 使用python的正则表达式
+   2. 如果使用启动`DOTALL`, `.`这个字符可以匹配任意的单个字符，包括换行符和回车符
    
 
 
@@ -517,5 +519,18 @@ ansible sw -i inventory.ini -m replace -a 'path=/opt/hosts regexp="(\S+)\.shC\.(
 
 172.21.0.115	skywalking-ecs-p001.shD.vevor.net	skywalking-ecs-p001.shD.vevor.net
 ```
-5. 
+
+5. 使用正则表达式替换某个行之前的内容
+
+```shell
+ansible sw -i inventory.ini -m replace -a 'path=/opt/hosts regexp="(\S+)\.shC\.(\S+)" replace="\1.shX.\2" before="127.0.0.1" backup=yes'
+```
+文档中，`before`接收的值类型是string，这里只要写到包含字符的行即可，通过命令可以发现
+
+6. 使用正则表达式将匹配文本前面加上注释
+
+```shell
+ansible sw -i inventory.ini -m replace -a 'path=/opt/hosts after="127.0.0.1" regexp="^(.*)$" replace="# \1" '
+```
+
 
