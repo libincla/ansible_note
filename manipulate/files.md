@@ -447,6 +447,10 @@ ansible sw -i inventory.ini -m find -a  'paths=/var/log patterns="*.log" size=1m
 2. regexp: 必须，指定一个python正则表达式，匹配到的字符串会被替换
 3. replace: 指定要替换的字符串内容
 4. backup: 是否要在修改前备份文件
+5. after: 如果指定了，匹配之后文档才会被替换或者删除
+   1. 使用python的正则表达式
+   2. 如果使用启动`DOTALL`, `.`这个字符可以匹配任意的单个字符，包括换行符和回车符
+6. 
    
 
 
@@ -464,4 +468,54 @@ ansible sw -i inventory.ini -m replace -a 'path=/opt/ssh_config regexp=".*Host.*
 ```shell
 ansible sw -i inventory.ini -m replace -a 'path=/opt/ssh_config regexp=".*Host.*" replace="MyHOST" backup=yes'
 ```
-3. 
+3. 使用正则表达式替换/etc/hosts文件
+
+```shell
+
+1. 首先拷贝文件
+ansible sw -i inventory.ini -m copy -a 'src=/etc/hosts dest=/opt owner=nobody group=nobody mode=0755'
+
+2. 做文本替换, 将shL替换为shC
+
+ansible sw -i inventory.ini -m replace -a 'path=/opt/hosts regexp="(\S+)\.shL\.(\S+)" replace="\1.shC.\2"'
+
+```
+
+4. 替换正则表达式之后的文件内容
+为了演示这个效果，特意在hosts的文件上加一行，在127.0.0.1之前加一行，测试文本如下
+
+```ini
+::1	localhost	localhost.localdomain	localhost6	localhost6.localdomain6
+172.21.0.116	skywalking-ecs-p003.shC.vevor.net	skywalking-ecs-p003.shC.vevor.net
+
+127.0.0.1	localhost	localhost.localdomain	localhost4	localhost4.localdomain4
+
+172.21.0.100	jenkins-ecs-p001.shC.vevor.net	jenkins-ecs-p001.shC.vevor.net
+
+172.21.37.85	cop-ecs-testa001.shC.vevor.net	cop-ecs-testa001.shC.vevor.net
+
+172.21.0.116	skywalking-ecs-p003.shC.vevor.net	skywalking-ecs-p003.shC.vevor.net
+```
+---
+这次只修改 127.0.0.1之后匹配到的正则表达式
+```shell
+ansible sw -i inventory.ini -m replace -a 'path=/opt/hosts regexp="(\S+)\.shC\.(\S+)" replace="\1.shD.\2" after="127.0.0.1" backup=yes'
+```
+
+文档中，`after`接收的值类型是string，这里只要写到包含字符的行即可，通过命令可以发现
+
+```ini
+::1	localhost	localhost.localdomain	localhost6	localhost6.localdomain6
+172.21.0.116 skywalking-ecs-p003.shC.vevor.net skywalking-ecs-p003.shC.vevor.net
+127.0.0.1	localhost	localhost.localdomain	localhost4	localhost4.localdomain4 
+
+# 127.0.0.1之后的行才发生了变化，之前的行并没有改变
+
+172.21.0.100	jenkins-ecs-p001.shD.vevor.net	jenkins-ecs-p001.shD.vevor.net
+
+172.21.37.85	cop-ecs-testa001.shD.vevor.net	cop-ecs-testa001.shD.vevor.net
+
+172.21.0.115	skywalking-ecs-p001.shD.vevor.net	skywalking-ecs-p001.shD.vevor.net
+```
+5. 
+
