@@ -530,7 +530,13 @@ ansible sw -i inventory.ini -m replace -a 'path=/opt/hosts regexp="(\S+)\.shC\.(
 6. 使用正则表达式将匹配文本前面加上注释
 
 ```shell
+
 ansible sw -i inventory.ini -m replace -a 'path=/opt/hosts after="127.0.0.1" regexp="^(.*)$" replace="# \1" '
+ansible sw -i inventory.ini -m replace -a 'path=/opt/hosts regexp="^(\w+)" replace="# \1" after="127.0.0.1" '
 ```
+
+
+
+
 
 
