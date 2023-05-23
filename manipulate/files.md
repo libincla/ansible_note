@@ -535,6 +535,7 @@ ansible sw -i inventory.ini -m replace -a 'path=/opt/hosts after="127.0.0.1" reg
 ansible sw -i inventory.ini -m replace -a 'path=/opt/hosts regexp="^(\w+)" replace="# \1" after="127.0.0.1" '
 ```
 
+---
 
 
 
