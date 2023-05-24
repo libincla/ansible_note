@@ -1,0 +1,141 @@
+# 系统管理类模块
+
+## cron
+
+> 帮助我们管理远程主机的`crontab`任务
+
+**参数**
+
+1. minute: 计划任务中分钟的值，不设置时，分钟设置的定位的值为"*"
+2. hour: 计划任务中的小时的值，不设置时，小时设置的定位的值为"*"
+3. day: 计划任务中的天的值，不设置时，天设置的定位的值为"*"
+4. month: 计划任务中的月份的值，不设置时，月份设置的定位的值为"*"
+5. weekay: 计划任务中的周几的值，不设置时，周几设置的定位的值为"*"
+6. special_time: 
+   1. annually: 每年
+   2. daily: 每天
+   3. hourly: 每时
+   4. monthly: 每月
+   5. reboot: 重启后
+   6. weekly: 每周
+   7. yearly: 每年
+7. user: 设置计划任务属于哪个用户（默认是管理员）
+8. job: 设置任务中需要实际执行的命令或者脚本，比如"echo test"这种命令
+9. name: 设置任务的名称，任务的名称会在注释中显示
+10. state: 根据计划任务的名称，设置修改或者删除计划任务
+---
+如果上述时间单位未指定，计划任务的时间被设定为"* * * * *"，这样表示每分钟都执行一次计划任务
+11. disabled: 根据计划任务的名称，使计划任务失效(注释掉对应的任务)
+12. backup: 当修改或者删除对应的计划任务时，先对计划任务进行备份，再对计划任务进行修改或删除
+
+**使用场景**
+
+1. 在远程主机上创建计划任务，任务名称叫test1，任务将于每天2点20分执行，任务内容为输出hello字符
+
+```shell
+ansible sw -i inventory.ini -m cron -a 'name="test1" minute=20 hour=2 job="echo 'hello' " '
+
+ansible sw -i inventory.ini -m shell -a 'crontab -l'
+
+skywalking-ecs-p001.shL.vevor.net | CHANGED | rc=0 >>
+#Ansible: test1
+20 2 * * * echo hello
+skywalking-ecs-p003.shL.vevor.net | CHANGED | rc=0 >>
+#Ansible: test1
+20 2 * * * echo hello
+skywalking-ecs-p002.shL.vevor.net | CHANGED | rc=0 >>
+#Ansible: test1
+20 2 * * * echo hello
+
+```
+2.  在远程主机上创建计划任务，任务名称叫test2，任务将于每3天执行一次，执行时间是当日的5点5分
+
+```shell
+ansible sw -i inventory.ini -m cron -a 'name="test2" minute=5 hour=5 day=*/3 job="echo test2 &> /dev/null" '
+
+#Ansible: test2
+5 5 */3 * * echo test2 &> /dev/null
+```
+
+3. 在远程主机上创建计划任务，任务名称叫test3，任务只有在重启后才被执行
+
+```shell
+ansible sw -i inventory.ini -m cron -a 'name="test3" special_time="reboot" job="echo test3" '
+
+#Ansible: test3
+@reboot echo test3
+
+```
+
+4. 修改远程主机的test3的计划任务，将重启后执行改成每小时执行，并备份计划任务
+
+```shell
+ansible sw -i inventory.ini -m cron -a 'name="test3" special_time=hourly job="echo testtest" backup=yes'
+
+#Ansible: test3
+@hourly echo testtest
+
+```
+备份计划任务可以从返回的信息中的"backup_file": "/tmp/crontabKbtEZd", 看到文件位置
+
+
+## system
+
+> 可以被管理的服务
+
+
+**参数**
+1. name: 参数用于指定要操作的服务名称，比如`nginx`
+2. state: 四种状态，
+   1. started(幂等操作)
+   2. stopped(幂等操作)
+   3. reloaded 将始终重新加载
+   4. restarted 会总是触发反弹单位
+3. enabled: 选择这个服务单位是否在`boot`阶段会启动
+   1. `false`
+   2. `true`
+4. daemon_reload: 在做任何操作更改之前运行`daemon-reload`，当设置为`true`，不管模块的服务是否启动/停止都运行`daemon-reload`
+   1. false (默认是这个)
+   2. true
+5. masked: 参数表示服务单位是否应该被隐藏，一个`masked`的服务单元是不会启动的
+   1. false
+   2. true
+
+**使用场景**
+
+1. 安装`httpd`服务，确保这个`httpd`服务是运行的
+
+```shell
+ansible sw -i inventory.ini -m yum -a 'name=httpd state=present'
+ansible sw -i inventory.ini -m systemd -a 'name=httpd state=started'
+
+```
+2. 确保`httpd`服务是停止的
+
+```shell
+ansible sw -i inventory.ini -m systemd -a 'name=httpd state=stopped'
+```
+3. 重启一下`httpd`服务，还使用`daemon-reload`方式获取配置
+
+```shell
+ansible sw -i inventory.ini -m systemd -a 'name=httpd state=restarted daemon-reload=yes'
+```
+
+4. 确保`httpd`服务，并且确保这个服务单元不是`masked`的
+
+```shell
+ansible sw -i inventory.ini -m systemd -a 'name=httpd enabled=yes masked=no'
+```
+5. 强迫`systemd`重读配置文件
+
+```shell
+ansible sw -i inventory.ini -m systemd -a 'daemon_reload=yes'
+```
+
+## user
+
+>
+
+## group
+
+>
