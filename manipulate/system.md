@@ -134,7 +134,51 @@ ansible sw -i inventory.ini -m systemd -a 'daemon_reload=yes'
 
 ## user
 
->
+> 管理远程主机的用户，创建、删除、修改用户以及为用户创建密钥
+
+**参数**
+1. name: 设置用户的名称
+2. create_home:  除非设置`false`，否则用户创建时会创建家目录
+   1. false
+   2. true(默认)
+3. group: 设置该用户所在的组
+4. groups: 设置用户所在的附加组。（如果用户想要继续添加新的附加组，要结合append参数使用）
+5. shell: 该参数设置用户默认的shell
+6. uid: 该参数用于指定用户的`uid`
+7. expires: 该参数用于指定用户的过期时间，相当于设置`/etc/shadow`文件的第8列  
+   1. 比如要设置用户过期时间为2024年12月31日，首先要获取2024年12月31日的`unix`时间戳，可以使用`date -d 2024-12-31 +%s`, 然后设置`expires=刚才命令的返回值`
+8. comment: 参数用于指定用户的注释信息
+9. state: 参数用于指定用户是否存在于远程主机上，可选的有
+   1.  present: 存在
+   2.  absent: 不存在
+10. remove: 当state值设置为absent时，只是删除用户，并不删除用户价目录，如果设置remove=yes，删除用户的同时还会删除用户的家目录
+    1.  false
+    2.  true
+11. password: 参数用于指定用户的密码，这个要输入的密码是明文密码加密后的字符串
+    1.  举个例子，比如我想设置密码为"asd1234", 可以在python上通过明文密码对应的加密字符串
+    2. 
+    ```python
+    import crypt; crypt.crypt('asd1234') --> '8ag80F/Y22NFs'
+    ```
+12. update_password: 
+    1.  always: 如果用户参数设置的值与之前加密的密码字符串不一样，直接更新用户密码(默认)
+    2.  on_create: 如果用户参数设置的值与之前加密的密码字符串不一样，**不会更新**用户密码
+13. generate_ssh_key: 是否为用户生成`ssh`密钥对（默认会在用户家目录.ssh生成id_rsa和id_rsa.pub; 若同名的密钥已经存在，原同名的密钥并不会覆盖，若执意覆盖，使用force=yes）
+    1.  false（默认）
+    2.  true
+14. ssh_key_file: 当设置`generate_ssh_key=yes`时，使用该参数自定义生成`ssh`私钥的路径和名称，默认值是`.ssh/id_rsa.`
+15. ssh_key_comment: 当设置`generate_ssh_key=yes`时，创建证书后，使用此参数设置公钥中的注释信息，默认注释信息为"ansible-generated on $HOSTNAME" (若同名的密钥已经存在，即不做任何操作，若执意，使用force=yes)
+16. ssh_key_passphrase: 当设置`generate_ssh_key=yes`时，使用这个参数可以设置私钥的密码 （若同名的密钥已经存在，即不做任何操作，若执意，使用force=yes)
+17. ssh_key_type: 当设置`generate_ssh_key=yes`时, 创建证书时，使用此参数设置密钥的类型，默认密钥类型为`rsa` （若同名的密钥已经存在，即不做任何操作，若执意，使用force=yes)
+
+**使用场景**
+
+1. 在远程主机上创建`libincla`用户，若用户存在，不做任何操作
+
+```shell
+
+```
+2. 
 
 ## group
 
