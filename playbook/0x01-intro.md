@@ -110,24 +110,24 @@ ansible-playbook -i inventory.ini --check test1.yaml
 PLAY [sw] ************************************************************************************************************************************************************
 
 TASK [Gathering Facts] ***********************************************************************************************************************************************
-ok: [skywalking-ecs-p003.shL.vevor.net]
-ok: [skywalking-ecs-p002.shL.vevor.net]
-ok: [skywalking-ecs-p001.shL.vevor.net]
+ok: [skywalking-ecs-p003.shL.XXXX.net]
+ok: [skywalking-ecs-p002.shL.XXXX.net]
+ok: [skywalking-ecs-p001.shL.XXXX.net]
 
 TASK [ping host] *****************************************************************************************************************************************************
-ok: [skywalking-ecs-p003.shL.vevor.net]
-ok: [skywalking-ecs-p001.shL.vevor.net]
-ok: [skywalking-ecs-p002.shL.vevor.net]
+ok: [skywalking-ecs-p003.shL.XXXX.net]
+ok: [skywalking-ecs-p001.shL.XXXX.net]
+ok: [skywalking-ecs-p002.shL.XXXX.net]
 
 TASK [create dir on /opt] ********************************************************************************************************************************************
-ok: [skywalking-ecs-p003.shL.vevor.net]
-ok: [skywalking-ecs-p001.shL.vevor.net]
-ok: [skywalking-ecs-p002.shL.vevor.net]
+ok: [skywalking-ecs-p003.shL.XXXX.net]
+ok: [skywalking-ecs-p001.shL.XXXX.net]
+ok: [skywalking-ecs-p002.shL.XXXX.net]
 
 PLAY RECAP ***********************************************************************************************************************************************************
-skywalking-ecs-p001.shL.vevor.net : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
-skywalking-ecs-p002.shL.vevor.net : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
-skywalking-ecs-p003.shL.vevor.net : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p001.shL.XXXX.net : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p002.shL.XXXX.net : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p003.shL.XXXX.net : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 
 ```
 
