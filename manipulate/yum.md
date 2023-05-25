@@ -6,11 +6,43 @@
 在远程主机上通过`yum`源管理软件包
 
 **参数**
-1. 
-2. b
-3. c
+1. name: 必须参数，指定要管理的软件包，比如`nginx`
+2. state: 指定软件包的状态，默认是`present`
+   1. absent 确保软件包已删除
+   2. installed 确保软件包已经安装
+   3. latest 安装`yum`仓库中最新的版本
+   4. present 确保软件包已经安装
+   5. removed 确保软件包已删除
+3. disable_gpg_check: 用于禁对rpm包的公钥`gpg`验证，
+   1. yes 禁用验证，不验证包
+   2. no (默认) 不会禁用验证，表示会对安装的包进行验证
+4. enablerepo:  用于指定安装软件包时临时启动的`yum`源，（假设想从A源中安装软件，不确定是否启用了A源，可以在安装软件包的时候，将此参数设置为yes）
+5. disablerepo: 用于指定安装软件包时临时禁用的`yum`源， 某些场景下需要此参数，当多个`yum`源同时存在要安装的软件包时，可以使用此参数临时禁用某个源
 
 **使用场景**
+
+1. 在远程主机上安装/更新`nginx`，禁用验证
+
+```shell
+ansible sw -i inventory.ini -m yum -a 'name=nginx state=present disable_gpg_check=yes'
+ansible sw -i inventory.ini -m yum -a 'name=nginx state=latest disable_gpg_check=yes'
+```
+
+2. 在远程主机上卸载`nginx`
+
+```shell
+ansible sw -i inventory.ini -m yum -a 'name=nginx state=absent'
+```
+3. 在远程主机上安装`tree`时不确定`local`源是否被启用，使用`enablerepo=local`临时启用源
+
+```shell
+ansible sw -i inventory.ini -m yum -a 'name=tree disable_gpg_check=yes enablerepo=local
+```
+4. 在远程主机上安装`tree`时，确定多个源都有，不想从`local`源中安装，在安装时临时禁用`local`源
+
+```shell
+ansible sw -i inventory.ini  -m yum -a 'name=tree disable_gpg_check=yes disablerepo=local'
+```
 
 
 ## yum_repository
@@ -42,11 +74,11 @@ ansible sw -i inventory.ini -m yum_repository -a 'name=aliEpel description="ali 
 
 ansible sw -i inventory.ini -m shell -a 'ls -l /etc/yum.repos.d/aliEpel.repo'
 
-skywalking-ecs-p003.shL.vevor.net | CHANGED | rc=0 >>
+skywalking-ecs-p003.shL.XXXX.net | CHANGED | rc=0 >>
 -rw-r--r-- 1 root root 99 May 25 15:46 /etc/yum.repos.d/aliEpel.repo
-skywalking-ecs-p001.shL.vevor.net | CHANGED | rc=0 >>
+skywalking-ecs-p001.shL.XXXX.net | CHANGED | rc=0 >>
 -rw-r--r-- 1 root root 99 May 25 15:46 /etc/yum.repos.d/aliEpel.repo
-skywalking-ecs-p002.shL.vevor.net | CHANGED | rc=0 >>
+skywalking-ecs-p002.shL.XXXX.net | CHANGED | rc=0 >>
 -rw-r--r-- 1 root root 99 May 25 15:46 /etc/yum.repos.d/aliEpel.repo
 
 
@@ -66,12 +98,12 @@ ansible sw -i inventory.ini -m yum_repository -a 'name=aliEpel baseurl="https://
 
 ansible sw -i inventory.ini -m shell -a 'ls -l /etc/yum.repos.d/alibaba.repo'
 
-skywalking-ecs-p002.shL.vevor.net | CHANGED | rc=0 >>
+skywalking-ecs-p002.shL.XXXX.net | CHANGED | rc=0 >>
 -rw-r--r-- 1 root root 108 May 25 15:52 /etc/yum.repos.d/alibaba.repo
 
 
 ansible sw -i inventory.ini -m shell -a 'cat /etc/yum.repos.d/alibaba.repo'
-skywalking-ecs-p003.shL.vevor.net | CHANGED | rc=0 >>
+skywalking-ecs-p003.shL.XXXX.net | CHANGED | rc=0 >>
 [aliEpel]
 baseurl = https://mirrors.aliyun.com/epel/$releasever\Server/$basearch/
 name = alibaba epel repo
