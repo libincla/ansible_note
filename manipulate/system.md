@@ -244,4 +244,24 @@ ansible sw -i inventory.ini -m user -a 'name=libincla generate_ssh_key=yes ssh_k
 
 ## group
 
->
+> 管理远程主机上的组
+
+**参数**
+1. name: 必须参数，指定要操作的组名称
+2. state: 指定组的状态
+   1. present
+   2. absent
+3. gid: 指定组的gid
+
+**使用场景**
+
+1. 在远程主机新建一个名叫"libin"的组
+
+```shell
+ansible sw -i inventory.ini -m group -a 'name=libin gid=10086'
+```
+2. 在远程主机上删除"libin"这个组
+
+```shell
+ansible sw -i inventory.ini -m group -a 'name=libin state=absent'
+```
