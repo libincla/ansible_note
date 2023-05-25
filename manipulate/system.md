@@ -37,13 +37,13 @@ ansible sw -i inventory.ini -m cron -a 'name="test1" minute=20 hour=2 job="echo 
 
 ansible sw -i inventory.ini -m shell -a 'crontab -l'
 
-skywalking-ecs-p001.shL.vevor.net | CHANGED | rc=0 >>
+skywalking-ecs-p001.shL.XXXX.net | CHANGED | rc=0 >>
 #Ansible: test1
 20 2 * * * echo hello
-skywalking-ecs-p003.shL.vevor.net | CHANGED | rc=0 >>
+skywalking-ecs-p003.shL.XXXX.net | CHANGED | rc=0 >>
 #Ansible: test1
 20 2 * * * echo hello
-skywalking-ecs-p002.shL.vevor.net | CHANGED | rc=0 >>
+skywalking-ecs-p002.shL.XXXX.net | CHANGED | rc=0 >>
 #Ansible: test1
 20 2 * * * echo hello
 

@@ -258,7 +258,7 @@ WTF
 ```shell
 ansible sw -i inventory.ini -m lineinfile -a 'path=/opt/testfile line="QQQ" '
 
-skywalking-ecs-p001.shL.vevor.net | CHANGED => {
+skywalking-ecs-p001.shL.XXXX.net | CHANGED => {
     "ansible_facts": {
         "discovered_interpreter_python": "/usr/bin/python"
     },
@@ -266,7 +266,7 @@ skywalking-ecs-p001.shL.vevor.net | CHANGED => {
     "changed": true,
     "msg": "line added"
 }
-skywalking-ecs-p002.shL.vevor.net | CHANGED => {
+skywalking-ecs-p002.shL.XXXX.net | CHANGED => {
     "ansible_facts": {
         "discovered_interpreter_python": "/usr/bin/python"
     },
@@ -274,7 +274,7 @@ skywalking-ecs-p002.shL.vevor.net | CHANGED => {
     "changed": true,
     "msg": "line added"
 }
-skywalking-ecs-p003.shL.vevor.net | CHANGED => {
+skywalking-ecs-p003.shL.XXXX.net | CHANGED => {
     "ansible_facts": {
         "discovered_interpreter_python": "/usr/bin/python"
     },
@@ -488,15 +488,15 @@ ansible sw -i inventory.ini -m replace -a 'path=/opt/hosts regexp="(\S+)\.shL\.(
 
 ```ini
 ::1	localhost	localhost.localdomain	localhost6	localhost6.localdomain6
-172.21.0.116	skywalking-ecs-p003.shC.vevor.net	skywalking-ecs-p003.shC.vevor.net
+172.21.0.116	skywalking-ecs-p003.shC.XXXX.net	skywalking-ecs-p003.shC.XXXX.net
 
 127.0.0.1	localhost	localhost.localdomain	localhost4	localhost4.localdomain4
 
-172.21.0.100	jenkins-ecs-p001.shC.vevor.net	jenkins-ecs-p001.shC.vevor.net
+172.21.0.100	jenkins-ecs-p001.shC.XXXX.net	jenkins-ecs-p001.shC.XXXX.net
 
-172.21.37.85	cop-ecs-testa001.shC.vevor.net	cop-ecs-testa001.shC.vevor.net
+172.21.37.85	cop-ecs-testa001.shC.XXXX.net	cop-ecs-testa001.shC.XXXX.net
 
-172.21.0.116	skywalking-ecs-p003.shC.vevor.net	skywalking-ecs-p003.shC.vevor.net
+172.21.0.116	skywalking-ecs-p003.shC.XXXX.net	skywalking-ecs-p003.shC.XXXX.net
 ```
 ---
 这次只修改 127.0.0.1之后匹配到的正则表达式
@@ -508,16 +508,16 @@ ansible sw -i inventory.ini -m replace -a 'path=/opt/hosts regexp="(\S+)\.shC\.(
 
 ```ini
 ::1	localhost	localhost.localdomain	localhost6	localhost6.localdomain6
-172.21.0.116 skywalking-ecs-p003.shC.vevor.net skywalking-ecs-p003.shC.vevor.net
+172.21.0.116 skywalking-ecs-p003.shC.XXXX.net skywalking-ecs-p003.shC.XXXX.net
 127.0.0.1	localhost	localhost.localdomain	localhost4	localhost4.localdomain4 
 
 # 127.0.0.1之后的行才发生了变化，之前的行并没有改变
 
-172.21.0.100	jenkins-ecs-p001.shD.vevor.net	jenkins-ecs-p001.shD.vevor.net
+172.21.0.100	jenkins-ecs-p001.shD.XXXX.net	jenkins-ecs-p001.shD.XXXX.net
 
-172.21.37.85	cop-ecs-testa001.shD.vevor.net	cop-ecs-testa001.shD.vevor.net
+172.21.37.85	cop-ecs-testa001.shD.XXXX.net	cop-ecs-testa001.shD.XXXX.net
 
-172.21.0.115	skywalking-ecs-p001.shD.vevor.net	skywalking-ecs-p001.shD.vevor.net
+172.21.0.115	skywalking-ecs-p001.shD.XXXX.net	skywalking-ecs-p001.shD.XXXX.net
 ```
 
 5. 使用正则表达式替换某个行之前的内容
