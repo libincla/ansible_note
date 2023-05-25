@@ -173,12 +173,74 @@ ansible sw -i inventory.ini -m systemd -a 'daemon_reload=yes'
 
 **使用场景**
 
-1. 在远程主机上创建`libincla`用户，若用户存在，不做任何操作
+1. 在远程主机上创建`libincla`用户，若用户存在，不做任何操作, 密码设置为123456
+
+先查找123456加密后的明文字符串
+
+```python
+import crypt;
+crypt.crypt('123456')
+'ZomhEfHJh/00U'
+```
+然后执行ansible命令
 
 ```shell
+ansible sw -i inventory.ini -m user -a 'user=libincla password="ZomhEfHJh/00U" '
 
 ```
-2. 
+
+2. 在远程主机上删除`libincla`用户，包括用户的家目录
+
+```shell
+ansible sw -i inventory.ini -m user -a 'user=libincla state=absent remove=yes'
+```
+
+3. 在远程主机上删除`libincla`用户，仅仅删除用户，不删除用户家目录
+
+```shell
+ansible sw -i inventory.ini -m user -a 'user=libincla state=absent'
+```
+4. 在远程主机上更新`libincla`用户的密码，若用户当前的加密字符串和命令中设置的加密字符串不一样(将密码12346改成abc123)，不**进行密码更新的操作**
+
+```shell
+ansible sw -i inventory.ini -m user -a 'user=libincla password="cRshI7kk4NWdw" update_password=on_create'
+```
+5.  在远程主机上更新`libincla`用户的密码，将密码12346改成abc123 (update_password=always可以不用加，默认就是这个)
+
+```shell
+ansible sw -i inventory.ini -m user -a 'user=libincla password="cRshI7kk4NWdw" update_password=always'
+```
+6. 在远程主机上新建`libincla`，并且生成`id_rsa`和`id_rsa.pub`密钥文件
+
+```shell
+ansible sw -i inventory.ini -m user -a 'user=libincla state=present generate_ssh_key=yes'
+```
+7. 在远程主机上新建`libincla`，并且生成`id_rsa`和`id_rsa.pub`密钥文件（重复执行，若存在同名的密钥文件，不会覆盖原来的密钥文件）
+
+```shell
+ansible sw -i inventory.ini -m user -a 'user=libincla state=present generate_ssh_key=yes'
+```
+8. 在远程主机上新建`libincla`，并且**执意覆盖**原有的`id_rsa`和`id_rsa.pub`密钥文件 (加入force=yes)
+
+```shell
+ansible sw -i inventory.ini -m user -a 'user=libincla state=present generate_ssh_key=yes force=yes'
+```
+9. 在远程主机上新建`libincla`，自定义ssh密钥对的文件名以及位置(在/opt目录下，生成libincla.pub和libincla)
+
+```shell
+ansible sw -i inventory.ini -m user -a 'name=libincla generate_ssh_key=yes ssh_key_file=/opt/libincla'
+```
+10. 在远程主机上新建`libincla`，指定公钥的注释信息为"www.libincla.com"，(参数只在创建密钥时使用才生效，不操作同名的老密钥)
+
+```shell
+ansible sw -i inventory.ini -m user -a 'user=libincla generate_ssh_key=yes ssh_key_comment="www.libincla.com" '
+```
+11. 在远程主机上新建`libincla`，指定密钥对的类型为dsa
+
+```shell
+ansible sw -i inventory.ini -m user -a 'name=libincla generate_ssh_key=yes ssh_key_type=dsa'
+```
+
 
 ## group
 
