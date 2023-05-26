@@ -1,5 +1,11 @@
 # 介绍最基本的功能 handlers
 
+## 概览
+
+1. 什么是`handlers`以及使用场景
+2. `handlers`的执行顺序
+3. 如何在一个`task`里执行多个`handlers`
+
 ## 什么情况下使用handlers
 
 举个例子，有个应用场景，涉及到两步task操作
@@ -42,7 +48,9 @@
       state=restarted
 
 ```
-**注意，这里把"="替换成":"的话，会报错**
+
+注意，这里把"="替换成":"的话，会报错
+
 ---
 
 ```shell
@@ -221,5 +229,82 @@ skywalking-ecs-p003.shL.XXXX.net : ok=5    changed=4    unreachable=0    failed=
 
 ### 简单示例2，触发多个handler的动作
 
+首先，我们要知道，多个`handler`的`name`相同时，只有一个`handler`会被执行
 
+但是 我们可以通过将 多个handler合成一个类似“组”的概念，通过`listen`关键字，这个“组”内的所有`handler`都会被`notify`
 
+通过一个示例来演示
+
+```yaml
+
+---
+
+- hosts: sw
+  remote_user: root
+  tasks:
+  - name: t1
+    file:
+      path=/opt/t1
+      state=directory
+
+    notify: handler group
+
+  - name: trigger handlers
+    meta: flush_handlers
+  
+  - name: t2
+    shell: echo "hiiii"
+
+  handlers:
+  - name: h1
+    listen: handler group
+    file:
+      path=/opt/t1/h1
+      state=touch
+
+  - name: h2
+    listen: handler group
+    file:
+      path=/opt/t1/h2
+      state=touch
+```
+
+执行结果
+
+```shell
+
+PLAY [sw] *************************************************************************************************************************************************************
+
+TASK [Gathering Facts] ************************************************************************************************************************************************
+ok: [skywalking-ecs-p001.shL.vevor.net]
+ok: [skywalking-ecs-p003.shL.vevor.net]
+ok: [skywalking-ecs-p002.shL.vevor.net]
+
+TASK [t1] *************************************************************************************************************************************************************
+changed: [skywalking-ecs-p003.shL.vevor.net]
+changed: [skywalking-ecs-p001.shL.vevor.net]
+changed: [skywalking-ecs-p002.shL.vevor.net]
+
+RUNNING HANDLER [h1] **************************************************************************************************************************************************
+changed: [skywalking-ecs-p003.shL.vevor.net]
+changed: [skywalking-ecs-p002.shL.vevor.net]
+changed: [skywalking-ecs-p001.shL.vevor.net]
+
+RUNNING HANDLER [h2] **************************************************************************************************************************************************
+changed: [skywalking-ecs-p003.shL.vevor.net]
+changed: [skywalking-ecs-p001.shL.vevor.net]
+changed: [skywalking-ecs-p002.shL.vevor.net]
+
+TASK [t2] *************************************************************************************************************************************************************
+changed: [skywalking-ecs-p002.shL.vevor.net]
+changed: [skywalking-ecs-p001.shL.vevor.net]
+changed: [skywalking-ecs-p003.shL.vevor.net]
+
+PLAY RECAP ************************************************************************************************************************************************************
+skywalking-ecs-p001.shL.vevor.net : ok=5    changed=4    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p002.shL.vevor.net : ok=5    changed=4    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p003.shL.vevor.net : ok=5    changed=4    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+```
+
+如示例所示，handler的`h1`和`h2`都属于 `handler group`这个组，当`notify`触发这个“组”，“组”里面的任务会按照编排顺序执行
