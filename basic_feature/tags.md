@@ -204,7 +204,7 @@ changed: [skywalking-ecs-p002.shL.XXX.net]
 1. 当我们不指定标签的时候，它的执行流程是怎么样的
 2. 我们通过标签选择后， 它的执行流程
 
-**不加标签**的时候，它不会执行带有`never`标签的task(即job4)
+**不加标签**的时候，它不会执行带有`never`标签的task(即job4不会执行)
 
 ```shell
 
