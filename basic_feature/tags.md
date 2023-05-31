@@ -204,7 +204,7 @@ changed: [skywalking-ecs-p002.shL.XXX.net]
 1. 当我们不指定标签的时候，它的执行流程是怎么样的
 2. 我们通过标签选择后， 它的执行流程
 
-**不加标签**的时候，它不会执行带有`never`标签的task
+**不加标签**的时候，它不会执行带有`never`标签的task(即job4)
 
 ```shell
 
@@ -214,19 +214,19 @@ ansible-playbook -i inventory.ini test8.yaml
 PLAY [sw] *************************************************************************************************************************************************************
 
 TASK [Gathering Facts] ************************************************************************************************************************************************
-ok: [skywalking-ecs-p003.shL.vevor.net]
-ok: [skywalking-ecs-p002.shL.vevor.net]
-ok: [skywalking-ecs-p001.shL.vevor.net]
+ok: [skywalking-ecs-p003.shL.XXX.net]
+ok: [skywalking-ecs-p002.shL.XXX.net]
+ok: [skywalking-ecs-p001.shL.XXX.net]
 
 TASK [job3 execute] ***************************************************************************************************************************************************
-changed: [skywalking-ecs-p003.shL.vevor.net]
-changed: [skywalking-ecs-p002.shL.vevor.net]
-changed: [skywalking-ecs-p001.shL.vevor.net]
+changed: [skywalking-ecs-p003.shL.XXX.net]
+changed: [skywalking-ecs-p002.shL.XXX.net]
+changed: [skywalking-ecs-p001.shL.XXX.net]
 
 PLAY RECAP ************************************************************************************************************************************************************
-skywalking-ecs-p001.shL.vevor.net : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
-skywalking-ecs-p002.shL.vevor.net : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
-skywalking-ecs-p003.shL.vevor.net : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p001.shL.XXX.net : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p002.shL.XXX.net : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p003.shL.XXX.net : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
 
 当我们**手动执行标签执行**的时候, 只要符合`tag`筛选条件还是会执行对应的逻辑
@@ -238,18 +238,18 @@ ansible-playbook -i inventory.ini -t job4 test8.yaml
 PLAY [sw] *************************************************************************************************************************************************************
 
 TASK [Gathering Facts] ************************************************************************************************************************************************
-ok: [skywalking-ecs-p003.shL.vevor.net]
-ok: [skywalking-ecs-p001.shL.vevor.net]
-ok: [skywalking-ecs-p002.shL.vevor.net]
+ok: [skywalking-ecs-p003.shL.XXX.net]
+ok: [skywalking-ecs-p001.shL.XXX.net]
+ok: [skywalking-ecs-p002.shL.XXX.net]
 
 TASK [job4 never execute] *********************************************************************************************************************************************
-changed: [skywalking-ecs-p003.shL.vevor.net]
-changed: [skywalking-ecs-p001.shL.vevor.net]
-changed: [skywalking-ecs-p002.shL.vevor.net]
+changed: [skywalking-ecs-p003.shL.XXX.net]
+changed: [skywalking-ecs-p001.shL.XXX.net]
+changed: [skywalking-ecs-p002.shL.XXX.net]
 
 PLAY RECAP ************************************************************************************************************************************************************
-skywalking-ecs-p001.shL.vevor.net : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
-skywalking-ecs-p002.shL.vevor.net : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
-skywalking-ecs-p003.shL.vevor.net : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p001.shL.XXX.net : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p002.shL.XXX.net : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p003.shL.XXX.net : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
 
