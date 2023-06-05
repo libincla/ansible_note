@@ -361,7 +361,6 @@ skywalking-ecs-p002.shL.XXX.net : ok=1    changed=1    unreachable=0    failed=0
 skywalking-ecs-p003.shL.XXX.net : ok=1    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
 
-# comment
 
 **all** 
 不必演示了，因为默认就是`all`
