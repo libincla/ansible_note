@@ -342,7 +342,7 @@ skywalking-ecs-p003.shL.XXX.net : ok=1    changed=1    unreachable=0    failed=0
       state: touch
 ```
 
-果然，只执行`execute job11`这个没有带标签的`task`
+果然，只执行`execute job11`这个没有带标签的`task`，**但是如果task带有`always`标签，还是会执行**
 
 ```shell
 # ansible-playbook -i inventory.ini -t untagged test9.yaml
