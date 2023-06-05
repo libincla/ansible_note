@@ -125,10 +125,10 @@ changed: [skywalking-ecs-p003.shL.XXX.net]
 `Ansible`中有5个特殊的`tag`，分别为
 
 1. `Always`: 任务就会总被执行
-2. `Never`
-3. `tagged`
+2. `Never`: 任务被标记后不会被执行
+3. `tagged`: 表示只执行带有标签的任务
 4. `untagged`
-5. `all`
+5. `all`: 默认设置，表示所有任务都会被执行
 
 **`always`**
 
@@ -178,6 +178,7 @@ changed: [skywalking-ecs-p002.shL.XXX.net]
 
 **never**
 
+> 默认被打标上`never`的task是不会被执行的
 
 ```yaml
 
@@ -253,3 +254,109 @@ skywalking-ecs-p002.shL.XXX.net : ok=2    changed=1    unreachable=0    failed=0
 skywalking-ecs-p003.shL.XXX.net : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
 
+
+**tagged**
+
+> 表示只执行带有标签的任务
+
+简单示例
+
+```yaml
+---
+
+- hosts: sw
+  remote_user: root
+  gather_facts: false
+  tasks:
+  - name: execute job10
+    file:
+      path: /opt/job10
+      state: touch
+      owner: nobody
+      group: nobody
+    tags:
+    - job10
+  - name: execute job11
+    file:
+      path: /opt/job11
+      state: touch
+```
+我们看一下执行流程(-t tagged)
+
+```shell
+ansible-playbook -i inventory.ini -t tagged test9.yaml
+
+[WARNING]: Invalid characters were found in group names but not replaced, use -vvvv to see details
+
+PLAY [sw] *************************************************************************************************************************************************************
+
+TASK [execute job10] **************************************************************************************************************************************************
+changed: [skywalking-ecs-p001.shL.XXX.net]
+changed: [skywalking-ecs-p002.shL.XXX.net]
+changed: [skywalking-ecs-p003.shL.XXX.net]
+
+PLAY RECAP ************************************************************************************************************************************************************
+skywalking-ecs-p001.shL.XXX.net : ok=1    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p002.shL.XXX.net : ok=1    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p003.shL.XXX.net : ok=1    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+```
+
+另外多个标签情况下，也是按照自上而下的顺序来执行的
+
+
+---
+
+**untagged**
+
+表示只执行没有标签的任务
+下面看示例
+
+```yaml
+
+---
+
+- hosts: sw
+  remote_user: root
+  gather_facts: false
+  tasks:
+  - name: execute job10
+    file:
+      path: /opt/job10
+      state: touch
+      owner: nobody
+      group: nobody
+    tags:
+    - job10
+  - name: execute job-S
+    file:
+      path: /opt/jobS
+      state: touch
+      owner: nobody
+      group: nobody
+    tags:
+    - jobS
+  - name: execute job11
+    file:
+      path: /opt/job11
+      state: touch
+```
+
+果然，只执行`execute job11`这个没有带标签的`task`
+
+```shell
+# ansible-playbook -i inventory.ini -t untagged test9.yaml
+[WARNING]: Invalid characters were found in group names but not replaced, use -vvvv to see details
+
+PLAY [sw] ***********************************************************************************************************************************************************
+
+TASK [execute job11] ************************************************************************************************************************************************
+changed: [skywalking-ecs-p003.shL.XXX.net]
+changed: [skywalking-ecs-p002.shL.XXX.net]
+changed: [skywalking-ecs-p001.shL.XXX.net]
+
+PLAY RECAP **********************************************************************************************************************************************************
+skywalking-ecs-p001.shL.XXX.net : ok=1    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p002.shL.XXX.net : ok=1    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p003.shL.XXX.net : ok=1    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
