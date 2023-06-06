@@ -139,4 +139,156 @@ nginx:
   conf6060: /etc/nginx/conf.d/6060.conf
 ```
 
+## 跳过变量收集
+
+在`playbook`中，使用`gather_facts: false`，关闭默认收集远程主机的相关信息，包括远程主机的`IP`地址、主机名、系统版本、硬件配置等等信息
+
+
+## setup模块
+
+> `setup`模块可以查看到`gathering facts`任务收集到的信息, 例如
+
+```shell
+# ansible sw -i inventory.ini -m setup | more
+[WARNING]: Invalid characters were found in group names but not replaced, use -vvvv to see details
+skywalking-ecs-p003.shL.XXX.net | SUCCESS => {
+    "ansible_facts": {
+        "ansible_all_ipv4_addresses": [
+            "172.21.0.116",
+            "172.17.0.1"
+        ],
+        "ansible_all_ipv6_addresses": [
+            "::AAAA:BBBB:CCCC:DDDD"
+        ],
+        "ansible_apparmor": {
+            "status": "disabled"
+        },
+        "ansible_architecture": "x86_64",
+        "ansible_bios_date": "04/01/2014",
+        "ansible_bios_version": "9e9f1cc",
+        "ansible_cmdline": {
+            "BOOT_IMAGE": "/boot/vmlinuz-3.10.0-1160.76.1.el7.x86_64",
+            "console": "ttyS0,115200n8",
+            "crashkernel": "auto",
+            "net.ifnames": "0",
+            "noibrs": true,
+            "nvme_core.admin_timeout": "4294967295",
+            "nvme_core.io_timeout": "4294967295",
+            "quiet": true,
+            "rhgb": true,
+            "ro": true,
+            "root": "UUID=4f4de78b-e926-4e41-9ab6-0643a8eed46f",
+            "spectre_v2": "retpoline"
+        },
+        "ansible_date_time": {
+            "date": "2023-06-06",
+            "day": "06",
+            "epoch": "1686017969",
+            "hour": "10",
+            "iso8601": "2023-06-06T02:19:29Z",
+            "iso8601_basic": "20230606T101929981760",
+            "iso8601_basic_short": "20230606T101929",
+            "iso8601_micro": "2023-06-06T02:19:29.981760Z",
+            "minute": "19",
+            "month": "06",
+            "second": "29",
+            "time": "10:19:29",
+            "tz": "CST",
+            "tz_offset": "+0800",
+            "weekday": "Tuesday",
+            "weekday_number": "2",
+
+.... 
+```
+
+返回的是一个很长的`json`字符串，里面的信息非常全面，例如
+
+1. `ansible_all_ipv4_addresses`: 远程主机的所有`ipv4`地址
+2. `ansible_architecture`: 远程主机的系统架构
+3. `ansible_bios_date`: 远程主机的`bios`日期
+等等非常之多
+
+### setup模块过滤信息
+
+使用`filter=`可以过滤`setup`收集的信息，我们来获取我们想要的信息
+
+```shell
+
+1. 仅仅展示`setup`获取的远程主机的内存信息
+
+ansible sw -i inventory.ini -m setup -a 'filter=ansible_memory_mb' -l skywalking-ecs-p001.shL.XXX.net
+[WARNING]: Invalid characters were found in group names but not replaced, use -vvvv to see details
+skywalking-ecs-p001.shL.XXX.net | SUCCESS => {
+    "ansible_facts": {
+        "ansible_memory_mb": {
+            "nocache": {
+                "free": 2318,
+                "used": 5360
+            },
+            "real": {
+                "free": 155,
+                "total": 7678,
+                "used": 7523
+            },
+            "swap": {
+                "cached": 0,
+                "free": 0,
+                "total": 0,
+                "used": 0
+            }
+        },
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false
+}
+2. 仅仅展示`setup`获取的远程主机的所有ipv4地址
+
+ansible sw -i inventory.ini -m setup -a 'filter=ansible_all_ipv4_addresses' -l skywalking-ecs-p001.shL.XXX.net
+
+skywalking-ecs-p001.shL.XXX.net | SUCCESS => {
+    "ansible_facts": {
+        "ansible_all_ipv4_addresses": [
+            "172.21.0.115",
+            "172.17.0.1"
+        ],
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false
+}
+
+```
+
+此外，`filter`还支持通配符模式，比如我想只找到带有`mb`的字符的收集的信息，可以这样
+
+```shell
+
+ansible sw -i example.ini -m setup -a 'filter=*mb*' -l skywalking-ecs-p002.shL.XXX.net
+skywalking-ecs-p002.shL.XXX.net | SUCCESS => {
+    "ansible_facts": {
+        "ansible_memfree_mb": 202,
+        "ansible_memory_mb": {
+            "nocache": {
+                "free": 2869,
+                "used": 4809
+            },
+            "real": {
+                "free": 202,
+                "total": 7678,
+                "used": 7476
+            },
+            "swap": {
+                "cached": 0,
+                "free": 0,
+                "total": 0,
+                "used": 0
+            }
+        },
+        "ansible_memtotal_mb": 7678,
+        "ansible_swapfree_mb": 0,
+        "ansible_swaptotal_mb": 0,
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false
+}
+```
 
