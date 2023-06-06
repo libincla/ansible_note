@@ -99,3 +99,44 @@ skywalking-ecs-p003.shL.XXX.net : ok=3    changed=2    unreachable=0    failed=0
 当使用这种**属性**时，可以使用两种方式来引用
 引用1: {{ nginx.conf80 }}
 引用2: {{ nginx['conf80']}}
+
+
+3. 变量中的双引号
+   1. 当变量被引用时，处于**顶头的位置**，要**使用双引号**，例如 `path: "{{ nginx.conf80 }}"`
+   2. 当变量使用"="为变量赋值的时候，不用考虑双引号的问题，例如 `path={{ nginx.conf80 }}`
+
+### 使用变量文件产生变量与剧本分离
+
+> 这样有了`role`的雏形了, 在`playbook`里使用`vars_files`关键字即可, `vars_files`可以接收多个变量文件定义
+
+将变量写在`nginx_vars.yml`里
+
+```yaml
+---
+
+- hosts: sw
+  remote_user: root
+  vars_files:
+  - nginx_vars.yml
+  tasks:
+  - name: touch file1
+    file:
+      path: "{{ nginx.conf60 }}"
+      state: touch
+  - name: touch file2
+    file:
+      path: "{{ nginx.conf6060 }}"
+      state: touch
+
+```
+
+- `nginx_vars.yml`内容 
+
+```yaml
+---
+nginx:
+  conf60: /etc/nginx/conf.d/60.conf
+  conf6060: /etc/nginx/conf.d/6060.conf
+```
+
+
