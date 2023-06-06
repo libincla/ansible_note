@@ -292,3 +292,156 @@ skywalking-ecs-p002.shL.XXX.net | SUCCESS => {
 }
 ```
 
+
+### 自定义fact信息
+
+**位置**
+`ansible`默认会去远程主机的`/etc/ansible/facts.d`目录下查找主机中的**自定义信息**，规定自定义信息要写在`.fact`后缀的文件中。这些`.fact`文件格式内容要以`INI`或者`JSON`格式的
+
+**如何引用**
+我们在远程主机自定义的信息，被称为**local facts**，当我们在使用`setup`模块收集信息时，远程主机的`local facts`也会被收集， 它被称为**ansible_local**
+
+为了展示，在`skywalking-ecs-p001.shL.XXX.net`主机内创建示例文件`/etc/ansible/facts.d/testinfo.ini`
+
+```ini
+[testmsg]
+msg1=Hello
+msg2=World
+```
+
+下面展示
+
+```shell
+
+ansible sw -i example.ini -m setup -a 'filter=ansible_local' -l skywalking-ecs-p001.shL.XXX.net
+skywalking-ecs-p001.shL.XXX.net | SUCCESS => {
+    "ansible_facts": {
+        "ansible_local": {
+            "testinfo": {
+                "testmsg": {
+                    "msg1": "Hello",
+                    "msg2": "World"
+                }
+            }
+        },
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false
+}
+
+```
+
+通过上述的方式，我们可以在目标主机上自定义信息。
+
+
+### 使用debug模块调试变量
+
+`debug`模块有两个作用
+1. 通过`msg`参数在控制台上输出信息
+2. **直接输出变量中的信息**
+
+下面我们看示例
+
+```yaml
+---
+
+- hosts: sw
+  remote_user: root
+  vars:
+    testvar: liusha
+  tasks:
+  - name: debug variable
+    debug:
+      var: testvar
+```
+
+执行结果
+
+```shell
+
+ansible-playbook -i example.ini test14.yaml
+
+PLAY [sw] ***********************************************************************************************************************************************************
+
+TASK [Gathering Facts] **********************************************************************************************************************************************
+ok: [skywalking-ecs-p003.shL.XXX.net]
+ok: [skywalking-ecs-p002.shL.XXX.net]
+ok: [skywalking-ecs-p001.shL.XXX.net]
+
+TASK [debug variable] ***********************************************************************************************************************************************
+ok: [skywalking-ecs-p001.shL.XXX.net] => {
+    "testvar": "liusha"
+}
+ok: [skywalking-ecs-p003.shL.XXX.net] => {
+    "testvar": "liusha"
+}
+ok: [skywalking-ecs-p002.shL.XXX.net] => {
+    "testvar": "liusha"
+}
+
+PLAY RECAP **********************************************************************************************************************************************************
+skywalking-ecs-p001.shL.XXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p002.shL.XXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p003.shL.XXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+```
+
+`ansible`通过`debug`模块将`var`参数输出到终端
+
+或者在`msg`参数中输出变量
+
+```yaml
+
+---
+- hosts: sw
+  remote_user: root
+  vars:
+    testvar: liusha
+  tasks:
+  - name: debug variable
+    debug:
+      msg: "{{ testvar }}"
+```
+
+举个例子，我们通过`debug`模块展示一下远程主机的内存使用情况
+
+```yaml
+---
+
+- hosts: sw
+  remote_user: root
+  tasks:
+  - name: debug variable
+    debug:
+      msg: "remote {{ ansible_host }} memory information: {{ ansible_memory_mb['real'] }}"
+```
+
+查看执行结果
+
+```shell
+
+# ansible-playbook -i example.ini test14.yaml
+
+PLAY [sw] ***********************************************************************************************************************************************************
+
+TASK [Gathering Facts] **********************************************************************************************************************************************
+ok: [skywalking-ecs-p003.shL.XXX.net]
+ok: [skywalking-ecs-p001.shL.XXX.net]
+ok: [skywalking-ecs-p002.shL.XXX.net]
+
+TASK [debug variable] ***********************************************************************************************************************************************
+ok: [skywalking-ecs-p001.shL.XXX.net] => {
+    "msg": "remote 172.21.0.115 memory information: 211"
+}
+ok: [skywalking-ecs-p002.shL.XXX.net] => {
+    "msg": "remote 172.21.0.117 memory information: 317"
+}
+ok: [skywalking-ecs-p003.shL.XXX.net] => {
+    "msg": "remote 172.21.0.116 memory information: 266"
+}
+
+PLAY RECAP **********************************************************************************************************************************************************
+skywalking-ecs-p001.shL.XXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p002.shL.XXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p003.shL.XXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
