@@ -6,6 +6,10 @@
 
 变量由字母、数字、下划线组成，要以字母为开头，内置的关键字不能作为变量名使用
 
+**特点**
+1. 灵活
+2. 有返回值
+
 ## 在playbook中使用变量
 
 使用`vars`关键字，可以在`playbook`中使用变量
@@ -444,4 +448,168 @@ PLAY RECAP *********************************************************************
 skywalking-ecs-p001.shL.XXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 skywalking-ecs-p002.shL.XXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 skywalking-ecs-p003.shL.XXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
+
+
+## 如何注册变量
+
+> `ansible`在模块运行后，都会产生一些“返回值“
+
+默认，返回值不会显示，不过我们可以将返回值**写入**变量中，即称为**注册变量**，进而我们可以根据这些返回值进行一些比如 条件判断等等, 通过关键字`register`来实现
+
+一个简单示例
+
+```yaml
+---
+
+- hosts: sw
+  remote_user: root
+  tasks:
+  - name: test my shell
+    shell: >
+      echo abc123 > /opt/test123
+    register: testvar
+  - name: shell module return value
+    debug:
+      msg: "variable is {{ testvar }}"
+```
+
+执行结果
+
+```shell
+
+# ansible-playbook -i example.ini test15.yaml
+
+PLAY [sw] ***********************************************************************************************************************************************************
+
+TASK [Gathering Facts] **********************************************************************************************************************************************
+ok: [skywalking-ecs-p003.shL.XXX.net]
+ok: [skywalking-ecs-p001.shL.XXX.net]
+ok: [skywalking-ecs-p002.shL.XXX.net]
+
+TASK [test my shell] ************************************************************************************************************************************************
+changed: [skywalking-ecs-p003.shL.XXX.net]
+changed: [skywalking-ecs-p001.shL.XXX.net]
+changed: [skywalking-ecs-p002.shL.XXX.net]
+
+TASK [shell module return value] ************************************************************************************************************************************
+ok: [skywalking-ecs-p001.shL.XXX.net] => {
+    "msg": "variable is {'stderr_lines': [], u'changed': True, u'end': u'2023-06-06 19:26:48.235691', 'failed': False, u'stdout': u'', u'cmd': u'echo abc123 > /opt/test123\\n', u'rc': 0, u'start': u'2023-06-06 19:26:48.224598', u'stderr': u'', u'delta': u'0:00:00.011093', 'stdout_lines': []}"
+}
+ok: [skywalking-ecs-p002.shL.XXX.net] => {
+    "msg": "variable is {'stderr_lines': [], u'changed': True, u'end': u'2023-06-06 19:26:48.242078', 'failed': False, u'stdout': u'', u'cmd': u'echo abc123 > /opt/test123\\n', u'rc': 0, u'start': u'2023-06-06 19:26:48.228603', u'stderr': u'', u'delta': u'0:00:00.013475', 'stdout_lines': []}"
+}
+ok: [skywalking-ecs-p003.shL.XXX.net] => {
+    "msg": "variable is {'stderr_lines': [], u'changed': True, u'end': u'2023-06-06 19:26:48.230660', 'failed': False, u'stdout': u'', u'cmd': u'echo abc123 > /opt/test123\\n', u'rc': 0, u'start': u'2023-06-06 19:26:48.221631', u'stderr': u'', u'delta': u'0:00:00.009029', 'stdout_lines': []}"
+}
+
+PLAY RECAP **********************************************************************************************************************************************************
+skywalking-ecs-p001.shL.XXX.net : ok=3    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p002.shL.XXX.net : ok=3    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p003.shL.XXX.net : ok=3    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
+
+---
+例子2
+
+```yaml
+---
+
+- hosts: sw
+  remote_user: root
+  tasks:
+  - name: curl website
+    uri:
+      url: https://www.baidu.com
+      method: GET
+      return_content: true  #这个参数会将返回的内容注册一个叫content的key添加到变量中
+    register: getresult
+
+  - name: get result
+    debug:
+      msg: "get baidu.com result is {{ getresult.content }}"
+```
+执行
+
+```shell
+# ansible-playbook -i inventory.ini test21.yaml
+[WARNING]: Invalid characters were found in group names but not replaced, use -vvvv to see details
+
+PLAY [sw] *************************************************************************************************************************************************************
+
+TASK [Gathering Facts] ************************************************************************************************************************************************
+ok: [skywalking-ecs-p002.shL.XXXX.net]
+ok: [skywalking-ecs-p001.shL.XXXX.net]
+ok: [skywalking-ecs-p003.shL.XXXX.net]
+
+TASK [curl website] ***************************************************************************************************************************************************
+ok: [skywalking-ecs-p003.shL.XXXX.net]
+ok: [skywalking-ecs-p002.shL.XXXX.net]
+ok: [skywalking-ecs-p001.shL.XXXX.net]
+
+TASK [get result] *****************************************************************************************************************************************************
+ok: [skywalking-ecs-p001.shL.XXXX.net] => {
+    "msg": "get baidu.com result is <html>\r\n<head>\r\n\t<script>\r\n\t\tlocation.replace(location.href.replace(\"https://\",\"http://\"));\r\n\t</script>\r\n</head>\r\n<body>\r\n\t<noscript><meta http-equiv=\"refresh\" content=\"0;url=http://www.baidu.com/\"></noscript>\r\n</body>\r\n</html>"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => {
+    "msg": "get baidu.com result is <html>\r\n<head>\r\n\t<script>\r\n\t\tlocation.replace(location.href.replace(\"https://\",\"http://\"));\r\n\t</script>\r\n</head>\r\n<body>\r\n\t<noscript><meta http-equiv=\"refresh\" content=\"0;url=http://www.baidu.com/\"></noscript>\r\n</body>\r\n</html>"
+}
+ok: [skywalking-ecs-p003.shL.XXXX.net] => {
+    "msg": "get baidu.com result is <html>\r\n<head>\r\n\t<script>\r\n\t\tlocation.replace(location.href.replace(\"https://\",\"http://\"));\r\n\t</script>\r\n</head>\r\n<body>\r\n\t<noscript><meta http-equiv=\"refresh\" content=\"0;url=http://www.baidu.com/\"></noscript>\r\n</body>\r\n</html>"
+}
+
+PLAY RECAP ************************************************************************************************************************************************************
+skywalking-ecs-p001.shL.XXXX.net : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p002.shL.XXXX.net : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p003.shL.XXXX.net : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
+
+
+
+## 交互式输入变量
+实在是不常用，跳过
+
+
+## 通过命令行传入变量
+
+```yaml
+---
+
+- hosts: sw
+  remote_user: root
+  tasks:
+  - name: pass variable via command line
+    debug:
+      msg: "{{ pass_var }}"
+
+```
+
+可以通过命令行选项 -e 或者是 --extra-vars 来传递变量，如下所示； 
+此外，-e还支持一次性传入多个变量，每个变量之间使用**空格**隔开，比如`-e ' A="ABC" B="BCD" '`
+
+```shell
+ansible-playbook -i inventory.ini -e "pass_var=haihaihai" test22.yaml
+
+PLAY [sw] *************************************************************************************************************************************************************
+
+TASK [Gathering Facts] ************************************************************************************************************************************************
+ok: [skywalking-ecs-p003.shL.XXXX.net]
+ok: [skywalking-ecs-p002.shL.XXXX.net]
+ok: [skywalking-ecs-p001.shL.XXXX.net]
+
+TASK [pass variable via command line] *********************************************************************************************************************************
+ok: [skywalking-ecs-p001.shL.XXXX.net] => {
+    "msg": "haihaihai"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => {
+    "msg": "haihaihai"
+}
+ok: [skywalking-ecs-p003.shL.XXXX.net] => {
+    "msg": "haihaihai"
+}
+
+PLAY RECAP ************************************************************************************************************************************************************
+skywalking-ecs-p001.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p002.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p003.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
