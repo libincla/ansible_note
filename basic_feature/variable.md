@@ -586,6 +586,8 @@ skywalking-ecs-p003.shL.XXXX.net : ok=3    changed=0    unreachable=0    failed=
 
 可以通过命令行选项 -e 或者是 --extra-vars 来传递变量，如下所示； 
 此外，-e还支持一次性传入多个变量，每个变量之间使用**空格**隔开，比如`-e ' A="ABC" B="BCD" '`
+变量的优先级，命令行的优先级最高
+
 
 ```shell
 ansible-playbook -i inventory.ini -e "pass_var=haihaihai" test22.yaml
@@ -613,3 +615,61 @@ skywalking-ecs-p001.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=
 skywalking-ecs-p002.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 skywalking-ecs-p003.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
+
+## 传入变量的多种形式
+
+1. 普通的`kv`形式
+```shell
+-e ' A="ABC" B="BCD" '
+```
+2. 通过`json`形式
+```shell
+-e '{"pass_var":"sunny", "pass_var1":"ll"}'
+```
+3. 通过数组模式
+
+```shell
+-e '{"pass_var": ["one", "two", "three"], "pass_var1": "null"}'
+```
+4. 通过变量文件形式，引用的时候通过"@"符号引用
+
+变量文件
+```yaml
+pass_var:
+- one
+- two
+- three
+- four
+pass_var1: 1234
+```
+引用变量 (通过"@"符号引用)
+```shell
+ ansible-playbook -i example.ini  -e "@passvar" test22.yaml
+
+PLAY [sw] ********************************************************************************************************************************************************************************************************************************************
+
+TASK [Gathering Facts] *******************************************************************************************************************************************************************************************************************************
+ok: [skywalking-ecs-p001.shL.XXXX.net]
+ok: [skywalking-ecs-p003.shL.XXXX.net]
+ok: [skywalking-ecs-p002.shL.XXXX.net]
+
+TASK [pass variable via command line] ****************************************************************************************************************************************************************************************************************
+ok: [skywalking-ecs-p001.shL.XXXX.net] => {
+    "msg": "[u'one', u'two', u'three', u'four'] 1234"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => {
+    "msg": "[u'one', u'two', u'three', u'four'] 1234"
+}
+ok: [skywalking-ecs-p003.shL.XXXX.net] => {
+    "msg": "[u'one', u'two', u'three', u'four'] 1234"
+}
+
+PLAY RECAP *******************************************************************************************************************************************************************************************************************************************
+skywalking-ecs-p001.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p002.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p003.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+```
+
+1. aaa
+2. 
