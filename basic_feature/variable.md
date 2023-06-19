@@ -995,19 +995,19 @@ sw2
 test_group_var="kafka"
 
 [sw1]
-skywalking-ecs-p002.shL.vevor.net ansible_host=172.21.0.117
+skywalking-ecs-p002.shL.XXXX.net ansible_host=172.21.0.117
 [sw2]
-skywalking-ecs-p003.shL.vevor.net ansible_host=172.21.0.116
+skywalking-ecs-p003.shL.XXXX.net ansible_host=172.21.0.116
 ```
 
 
 ```shell
 # ansible sw -i example.ini -m debug -a "msg={{ inventory_hostname }}"
-skywalking-ecs-p002.shL.vevor.net | SUCCESS => {
-    "msg": "skywalking-ecs-p002.shL.vevor.net"
+skywalking-ecs-p002.shL.XXXX.net | SUCCESS => {
+    "msg": "skywalking-ecs-p002.shL.XXXX.net"
 }
-skywalking-ecs-p003.shL.vevor.net | SUCCESS => {
-    "msg": "skywalking-ecs-p003.shL.vevor.net"
+skywalking-ecs-p003.shL.XXXX.net | SUCCESS => {
+    "msg": "skywalking-ecs-p003.shL.XXXX.net"
 }
 ```
 
@@ -1041,4 +1041,47 @@ test_group_var="kafka"
 
 ---
 
-4. 
+4. `play_hosts`
+  
+> 该内置变量可以获取到当前`play`所操作的所有主机的主机名列表
+
+```yaml
+---
+- hosts: sw1,sw2
+  remote_user: root
+  gather_facts: true
+  tasks:
+  - name: debug hosts
+    debug:
+      msg: "{{ play_hosts }}"
+```
+执行结果
+
+```shell
+PLAY [sw1,sw2] ***************************************************************************************************************************************************
+
+TASK [Gathering Facts] *******************************************************************************************************************************************
+ok: [skywalking-ecs-p003.shL.XXXX.net]
+ok: [skywalking-ecs-p002.shL.XXXX.net]
+
+TASK [debug hosts] ***********************************************************************************************************************************************
+ok: [skywalking-ecs-p002.shL.XXXX.net] => {
+    "msg": [
+        "skywalking-ecs-p002.shL.XXXX.net",
+        "skywalking-ecs-p003.shL.XXXX.net"
+    ]
+}
+ok: [skywalking-ecs-p003.shL.XXXX.net] => {
+    "msg": [
+        "skywalking-ecs-p002.shL.XXXX.net",
+        "skywalking-ecs-p003.shL.XXXX.net"
+    ]
+}
+
+PLAY RECAP *******************************************************************************************************************************************************
+skywalking-ecs-p002.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p003.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+```
+
+5. 
