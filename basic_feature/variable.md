@@ -337,6 +337,181 @@ skywalking-ecs-p001.shL.XXX.net | SUCCESS => {
 
 通过上述的方式，我们可以在目标主机上自定义信息。
 
+### 通过set_fact定义变量
+
+> `task`支持通过`set_fact`模块定义变量，如例
+
+```yaml
+---
+
+- hosts: sw
+  remote_user: root
+  tasks:
+  - name: set variable
+    set_fact:
+      myfact: "wow"
+  - name: print variable
+    debug:
+      msg: "{{ myfact }}"
+```
+
+执行一下，看下效果
+
+```shell
+# ansible-playbook -i example.ini test23.yaml
+
+PLAY [sw] ********************************************************************************************************************************************************************************************************************************************
+
+TASK [Gathering Facts] *******************************************************************************************************************************************************************************************************************************
+ok: [skywalking-ecs-p003.shL.XXXX.net]
+ok: [skywalking-ecs-p002.shL.XXXX.net]
+ok: [skywalking-ecs-p001.shL.XXXX.net]
+
+TASK [set variable] **********************************************************************************************************************************************************************************************************************************
+ok: [skywalking-ecs-p001.shL.XXXX.net]
+ok: [skywalking-ecs-p002.shL.XXXX.net]
+ok: [skywalking-ecs-p003.shL.XXXX.net]
+
+TASK [print variable] ********************************************************************************************************************************************************************************************************************************
+ok: [skywalking-ecs-p001.shL.XXXX.net] => {
+    "msg": "wow"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => {
+    "msg": "wow"
+}
+ok: [skywalking-ecs-p003.shL.XXXX.net] => {
+    "msg": "wow"
+}
+
+PLAY RECAP *******************************************************************************************************************************************************************************************************************************************
+skywalking-ecs-p001.shL.XXXX.net : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p002.shL.XXXX.net : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p003.shL.XXXX.net : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
+
+
+**通过`set_fact`将变量传递给另一个变量**
+
+查看例子
+
+```yaml
+---
+
+- hosts: sw
+  remote_user: root
+  vars:
+  - outsect: "null"
+  tasks:
+  - name: A
+    shell: >
+      echo "haha"
+    register: haha
+  - name: B
+    set_fact:
+      t1: "{{ outsect }}"
+      t2: "{{ haha.stdout }}"
+  - name: C
+    debug:
+      msg: "{{ t1 }} {{ t2 }}"
+```
+查看执行结果
+
+```shell
+# ansible-playbook -i example.ini  test24.yaml
+
+PLAY [sw] ********************************************************************************************************************************************************************************************************************************************
+
+TASK [Gathering Facts] *******************************************************************************************************************************************************************************************************************************
+ok: [skywalking-ecs-p001.shL.XXXX.net]
+ok: [skywalking-ecs-p003.shL.XXXX.net]
+ok: [skywalking-ecs-p002.shL.XXXX.net]
+
+TASK [A] *********************************************************************************************************************************************************************************************************************************************
+changed: [skywalking-ecs-p003.shL.XXXX.net]
+changed: [skywalking-ecs-p002.shL.XXXX.net]
+changed: [skywalking-ecs-p001.shL.XXXX.net]
+
+TASK [B] *********************************************************************************************************************************************************************************************************************************************
+ok: [skywalking-ecs-p001.shL.XXXX.net]
+ok: [skywalking-ecs-p002.shL.XXXX.net]
+ok: [skywalking-ecs-p003.shL.XXXX.net]
+
+TASK [C] *********************************************************************************************************************************************************************************************************************************************
+ok: [skywalking-ecs-p001.shL.XXXX.net] => {
+    "msg": "null haha"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => {
+    "msg": "null haha"
+}
+ok: [skywalking-ecs-p003.shL.XXXX.net] => {
+    "msg": "null haha"
+}
+
+PLAY RECAP *******************************************************************************************************************************************************************************************************************************************
+skywalking-ecs-p001.shL.XXXX.net : ok=4    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p002.shL.XXXX.net : ok=4    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p003.shL.XXXX.net : ok=4    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
+
+**set_fact在相同主机的play中使用**
+
+直接看例子，下面的例子两个`play`的主机是同一个
+
+```yaml
+---
+
+- hosts: sw
+  remote_user: root
+  vars:
+  - z1: "clar"
+  tasks:
+  - name: set var
+    set_fact:
+      o1: "tv"
+  - name: print var
+    debug:
+      msg: "variable is {{ z1 }} ;fact is {{ o1 }}"
+
+
+- hosts: sw
+  remote_user: root
+  tasks:
+  - name: print z1
+    debug:
+      msg: "variable is {{ z1 }}"
+  - name: print o1
+    debug:
+      msg: "fact is {{ o1 }}"
+```
+在第一个`play`中分别定义了两种变量，一个通过`vars`定义的，另一个通过`set_fact`定义的，我们执行一下看下结果
+
+```shell
+
+TASK [print z1] **************************************************************************************************************************************************************************************************************************************
+fatal: [skywalking-ecs-p001.shL.XXXX.net]: FAILED! => {"msg": "The task includes an option with an undefined variable. The error was: 'z1' is undefined\n\nThe error appears to be in '/app/ansible/test25.yaml': line 19, column 5, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n  tasks:\n  - name: print z1\n    ^ here\n"}
+fatal: [skywalking-ecs-p002.shL.XXXX.net]: FAILED! => {"msg": "The task includes an option with an undefined variable. The error was: 'z1' is undefined\n\nThe error appears to be in '/app/ansible/test25.yaml': line 19, column 5, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n  tasks:\n  - name: print z1\n    ^ here\n"}
+fatal: [skywalking-ecs-p003.shL.XXXX.net]: FAILED! => {"msg": "The task includes an option with an undefined variable. The error was: 'z1' is undefined\n\nThe error appears to be in '/app/ansible/test25.yaml': line 19, column 5, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n  tasks:\n  - name: print z1\n    ^ here\n"}
+
+```
+在执行到`play2`的`print z1`就报错了，发现`play1`中通过`vars`定义的变量并未生效，我们看下`set_fact`
+
+
+```shell
+TASK [print o1] **************************************************************************************************************************************************************************************************************************************
+ok: [skywalking-ecs-p001.shL.XXXX.net] => {
+    "msg": "fact is tv"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => {
+    "msg": "fact is tv"
+}
+ok: [skywalking-ecs-p003.shL.XXXX.net] => {
+    "msg": "fact is tv"
+}
+```
+`set_fact`的变量可以被正常输出的，说明`set_fact`中定义的变量是围绕主机组`sw`的
+**即便是同一个`role`的作用域也支持**
+
+
 
 ### 使用debug模块调试变量
 
@@ -671,5 +846,197 @@ skywalking-ecs-p003.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=
 
 ```
 
-1. aaa
-2. 
+
+### 主机变量
+
+如何配置主机变量，在编写资源清单文件时候，可以直接使用k=v形式，例如
+
+```ini
+[sw]
+skywalking-ecs-p001.shL.XXXX.net ansible_host=172.21.0.115 testhostvar=1.1.1.1
+skywalking-ecs-p002.shL.XXXX.net ansible_host=172.21.0.117 testhostvar=2.2.2.2
+skywalking-ecs-p003.shL.XXXX.net ansible_host=172.21.0.116 testhostvar=3.3.3.3
+```
+
+分别为每个主机组的主机定义了一个`testhostvar`变量
+
+直接通过执行来查看变量是否生效
+
+```shell
+
+# ansible sw -i example.ini -m debug -a 'msg="{{ testhostvar }}"'
+skywalking-ecs-p003.shL.XXXX.net | SUCCESS => {
+    "msg": "3.3.3.3"
+}
+skywalking-ecs-p001.shL.XXXX.net | SUCCESS => {
+    "msg": "1.1.1.1"
+}
+skywalking-ecs-p002.shL.XXXX.net | SUCCESS => {
+    "msg": "2.2.2.2"
+}
+```
+
+### 主机组变量
+
+直接通过在主机组定义后加`:vars`方式来定义
+
+```ini
+[sw]
+skywalking-ecs-p001.shL.XXXX.net ansible_host=172.21.0.115 testhostvar=1.1.1.1
+skywalking-ecs-p002.shL.XXXX.net ansible_host=172.21.0.117 testhostvar=2.2.2.2
+skywalking-ecs-p003.shL.XXXX.net ansible_host=172.21.0.116 testhostvar=3.3.3.3
+
+[sw:vars]
+test_group_var="kafka"
+```
+通过`shell`模块执行一下
+
+```shell
+#ansible sw -i example.ini -m shell -a " echo {{ test_group_var }}"
+skywalking-ecs-p003.shL.XXXX.net | CHANGED | rc=0 >>
+kafka
+skywalking-ecs-p001.shL.XXXX.net | CHANGED | rc=0 >>
+kafka
+skywalking-ecs-p002.shL.XXXX.net | CHANGED | rc=0 >>
+kafka
+```
+
+
+### 内置变量
+
+1. 获取`ansible`的版本信息变量
+```yaml
+
+---
+- hosts: sw
+  remote_user: root
+  tasks:
+  - name: print ansible version
+    debug:
+      msg: "ansible version is {{ ansible_version }}"
+
+```
+执行
+```shell
+# ansible-playbook -i example.ini test31.yaml
+
+PLAY [sw] ********************************************************************************************************************************************************
+
+TASK [Gathering Facts] *******************************************************************************************************************************************
+ok: [skywalking-ecs-p001.shL.XXXX.net]
+ok: [skywalking-ecs-p002.shL.XXXX.net]
+ok: [skywalking-ecs-p003.shL.XXXX.net]
+
+TASK [print ansible version] *************************************************************************************************************************************
+ok: [skywalking-ecs-p001.shL.XXXX.net] => {
+    "msg": "ansible version is {'major': 2, 'full': '2.9.27', 'string': '2.9.27', 'minor': 9, 'revision': 27}"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => {
+    "msg": "ansible version is {'major': 2, 'full': '2.9.27', 'string': '2.9.27', 'minor': 9, 'revision': 27}"
+}
+ok: [skywalking-ecs-p003.shL.XXXX.net] => {
+    "msg": "ansible version is {'major': 2, 'full': '2.9.27', 'string': '2.9.27', 'minor': 9, 'revision': 27}"
+}
+
+PLAY RECAP *******************************************************************************************************************************************************
+skywalking-ecs-p001.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p002.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p003.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
+
+2. 获取`ansible`控制的主机组所有的主机名(主机变量属于hostvars,因此要将gather_facts设置为yes)
+
+```yaml
+---
+- hosts: sw
+  remote_user: root
+  # gather_facts: no
+  tasks:
+  - name: print ansible remote machine ipaddress
+    debug:
+      msg: "ansible hostname is {{ ansible_fqdn }}"
+```
+执行
+
+```shell
+PLAY [sw] ********************************************************************************************************************************************************
+
+TASK [Gathering Facts] *******************************************************************************************************************************************
+ok: [skywalking-ecs-p002.shL.XXXX.net]
+ok: [skywalking-ecs-p003.shL.XXXX.net]
+ok: [skywalking-ecs-p001.shL.XXXX.net]
+
+TASK [print ansible remote machine ipaddress] ********************************************************************************************************************
+ok: [skywalking-ecs-p001.shL.XXXX.net] => {
+    "msg": "ansible hostname is skywalking-ecs-p001.shL.XXXX.net"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => {
+    "msg": "ansible hostname is skywalking-ecs-p002.shL.XXXX.net"
+}
+ok: [skywalking-ecs-p003.shL.XXXX.net] => {
+    "msg": "ansible hostname is skywalking-ecs-p003.shL.XXXX.net"
+}
+
+PLAY RECAP *******************************************************************************************************************************************************
+skywalking-ecs-p001.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p002.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+skywalking-ecs-p003.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
+
+3. inventory_hostname变量
+
+先看一下主机资源清单文件
+```ini
+[sw:children]
+sw1
+sw2
+
+[sw:vars]
+test_group_var="kafka"
+
+[sw1]
+skywalking-ecs-p002.shL.vevor.net ansible_host=172.21.0.117
+[sw2]
+skywalking-ecs-p003.shL.vevor.net ansible_host=172.21.0.116
+```
+
+
+```shell
+# ansible sw -i example.ini -m debug -a "msg={{ inventory_hostname }}"
+skywalking-ecs-p002.shL.vevor.net | SUCCESS => {
+    "msg": "skywalking-ecs-p002.shL.vevor.net"
+}
+skywalking-ecs-p003.shL.vevor.net | SUCCESS => {
+    "msg": "skywalking-ecs-p003.shL.vevor.net"
+}
+```
+
+当我们用不同风格的主机清单文件，它的`inventory_hostname`显示的是不同的样式
+
+```ini
+[sw:children]
+sw1
+sw2
+
+[sw:vars]
+test_group_var="kafka"
+
+[sw1]
+172.21.0.117
+[sw2]
+172.21.0.116
+```
+
+执行
+
+```shell
+# ansible sw -i example1.ini -m debug -a "msg={{ inventory_hostname }}"
+172.21.0.117 | SUCCESS => {
+    "msg": "172.21.0.117"
+}
+172.21.0.116 | SUCCESS => {
+    "msg": "172.21.0.116"
+}
+```
+
+4. 
