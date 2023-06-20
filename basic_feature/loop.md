@@ -463,3 +463,146 @@ ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[4, u'd', None]) => {
 }
 
 ```
+
+
+## with_cartesian
+
+> cartesian: 笛卡尔的,  顾名思义，就是笛卡尔乘积的
+> 上下两个列表项 交叉在一起
+
+比如，要有这么一个例子
+需要在服务器上创建
+/opt/a/t1, /opt/a/t2, /opt/a/t3、/opt/b/t1, /opt/b/t2, /opt/b/t3这六个目录，显然这是笛卡尔交叉有规律的，用以下的例子
+
+```yaml
+---
+- hosts: sw1
+  remote_user: root
+  tasks:
+  - name: create cartesian file
+    file:
+      path: "/opt/{{ item.0 }}/{{ item.1 }}"
+      state: directory
+      recurse: yes
+
+    with_cartesian:
+    - [ "a", "b" ]
+    - [ "t1", "t2", "t3" ]
+```
+
+
+执行
+
+```shell
+# ansible-playbook -i example.ini test47.yaml
+
+PLAY [sw1] *********************************************************************************************************************************************************************************
+
+TASK [Gathering Facts] *********************************************************************************************************************************************************************
+ok: [skywalking-ecs-p002.shL.XXXX.net]
+
+TASK [create cartesian file] ***************************************************************************************************************************************************************
+changed: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'a', u't1'])
+changed: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'a', u't2'])
+changed: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'a', u't3'])
+changed: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'b', u't1'])
+changed: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'b', u't2'])
+changed: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'b', u't3'])
+
+PLAY RECAP *********************************************************************************************************************************************************************************
+skywalking-ecs-p002.shL.XXXX.net : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+
+# 查看一下是否创建
+
+# ansible sw1 -i example.ini  -m shell -a 'ls -l /opt/a* /opt/b*'
+skywalking-ecs-p002.shL.XXXX.net | CHANGED | rc=0 >>
+
+/opt/a:
+total 12
+drwxr-xr-x 2 root root 4096 Jun 20 19:36 t1
+drwxr-xr-x 2 root root 4096 Jun 20 19:36 t2
+drwxr-xr-x 2 root root 4096 Jun 20 19:36 t3
+
+/opt/b:
+total 12
+drwxr-xr-x 2 root root 4096 Jun 20 19:36 t1
+drwxr-xr-x 2 root root 4096 Jun 20 19:36 t2
+drwxr-xr-x 2 root root 4096 Jun 20 19:36 t3
+
+```
+
+再看一个笛卡尔的示例
+
+```yaml
+---
+- hosts: sw1
+  remote_user: root
+  tasks:
+  - name: create cartesian file
+    debug:
+      msg: "first {{ item.0 }}; second {{ item.1 }}; third {{ item.2 }}"
+    with_cartesian:
+    - [ "a", "b" ]
+    - [ "t1", "t2", "t3" ]
+    - [ 1, 2, 3 ]
+```
+
+执行
+
+```shell
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'a', u't1', 1]) => {
+    "msg": "first a; second t1; third 1"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'a', u't1', 2]) => {
+    "msg": "first a; second t1; third 2"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'a', u't1', 3]) => {
+    "msg": "first a; second t1; third 3"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'a', u't2', 1]) => {
+    "msg": "first a; second t2; third 1"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'a', u't2', 2]) => {
+    "msg": "first a; second t2; third 2"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'a', u't2', 3]) => {
+    "msg": "first a; second t2; third 3"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'a', u't3', 1]) => {
+    "msg": "first a; second t3; third 1"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'a', u't3', 2]) => {
+    "msg": "first a; second t3; third 2"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'a', u't3', 3]) => {
+    "msg": "first a; second t3; third 3"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'b', u't1', 1]) => {
+    "msg": "first b; second t1; third 1"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'b', u't1', 2]) => {
+    "msg": "first b; second t1; third 2"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'b', u't1', 3]) => {
+    "msg": "first b; second t1; third 3"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'b', u't2', 1]) => {
+    "msg": "first b; second t2; third 1"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'b', u't2', 2]) => {
+    "msg": "first b; second t2; third 2"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'b', u't2', 3]) => {
+    "msg": "first b; second t2; third 3"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'b', u't3', 1]) => {
+    "msg": "first b; second t3; third 1"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'b', u't3', 2]) => {
+    "msg": "first b; second t3; third 2"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'b', u't3', 3]) => {
+    "msg": "first b; second t3; third 3"
+}
+```
