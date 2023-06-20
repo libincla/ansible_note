@@ -150,3 +150,316 @@ skywalking-ecs-p003.shL.XXXX.net : ok=2    changed=1    unreachable=0    failed=
             {{ x.stdout }}
         {% endfor %}"
 ```
+
+
+## with_items、with_list以及loop
+
+以一个例子来展示`with_items`、`with_list`以及`loop`的不同
+
+**with_items**
+
+```yaml
+---
+- hosts: sw
+  remote_user: root
+  tasks:
+  - name: execute for
+    debug:
+      msg: "{{ item }}"
+    with_items:
+    - [ 1, 2, 3 ]
+    - [ "a", "b" ]
+```
+
+执行结果(这里为了展示篇幅，通过`-l`只让一个主机生效)
+
+```shell
+# ansible-playbook -i example.ini test44.yaml -l sw1   
+
+PLAY [sw] **********************************************************************************************************************************************************************************
+
+TASK [Gathering Facts] *********************************************************************************************************************************************************************
+ok: [skywalking-ecs-p002.shL.XXXX.net]
+
+TASK [execute for] *************************************************************************************************************************************************************************
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=1) => {
+    "msg": 1
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=2) => {
+    "msg": 2
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=3) => {
+    "msg": 3
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=a) => {
+    "msg": "a"
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=b) => {
+    "msg": "b"
+}
+
+PLAY RECAP *********************************************************************************************************************************************************************************
+skywalking-ecs-p002.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+```
+
+可以看出来，`with_items`将列表项每一项都拆出来了
+
+
+**with_list**
+
+```yaml
+
+---
+- hosts: sw
+  remote_user: root
+  tasks:
+  - name: execute for
+    debug:
+      msg: "{{ item }}"
+    with_list:
+    - [ 1, 2, 3 ]
+    - [ "a", "b" ]
+
+```
+执行结果
+
+```shell
+# ansible-playbook -i example.ini test44.yaml -l sw1
+
+PLAY [sw] **********************************************************************************************************************************************************************************
+
+TASK [Gathering Facts] *********************************************************************************************************************************************************************
+ok: [skywalking-ecs-p002.shL.XXXX.net]
+
+TASK [execute for] *************************************************************************************************************************************************************************
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[1, 2, 3]) => {
+    "msg": [
+        1,
+        2,
+        3
+    ]
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'a', u'b']) => {
+    "msg": [
+        "a",
+        "b"
+    ]
+}
+```
+
+with_list将item的最小范围缩小成一个[],因此可以看到执行时，出现item=[1, 2, 3] 以及 item=[u'a', u'b']
+
+
+**loop**
+
+```yaml
+---
+- hosts: sw
+  remote_user: root
+  tasks:
+  - name: execute for
+    debug:
+      msg: "{{ item }}"
+    loop:
+    - [ 1, 2, 3 ]
+    - [ "a", "b" ]
+```
+
+执行结果
+
+```shell
+# ansible-playbook -i example.ini test44.yaml -l sw1
+
+PLAY [sw] **********************************************************************************************************************************************************************************
+
+TASK [Gathering Facts] *********************************************************************************************************************************************************************
+ok: [skywalking-ecs-p002.shL.XXXX.net]
+
+TASK [execute for] *************************************************************************************************************************************************************************
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[1, 2, 3]) => {
+    "msg": [
+        1,
+        2,
+        3
+    ]
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'a', u'b']) => {
+    "msg": [
+        "a",
+        "b"
+    ]
+}
+
+```
+
+可以看出来，`loop`的效果和`with_list`相似
+
+
+> 当处理简单的列表项时，`with_items`和`with_list`以及`loop`没有任何区别
+> 但当出现了嵌套列表时，`with_items`会将这个嵌套列表展开，后循环处理所有元素，而`with_list`则不会展开列表，循环处理最外层的列表的每项
+
+
+## with_flattened
+
+> `with_flattened`可以实现将嵌套列表展开（拉平），逐项展示
+
+直接看示例
+
+```yaml
+---
+
+- hosts: sw
+  remote_user: root
+  tasks:
+  - name: execute for
+    debug:
+      msg: "{{ item }}"
+    with_flattened:
+    - [ [1, 2], 3, [ 4,5,6 ] ]
+```]
+
+执行结果
+
+```shell
+# ansible-playbook -i example.ini test45.yaml  -l sw1
+
+PLAY [sw] **********************************************************************************************************************************************************************************
+
+TASK [Gathering Facts] *********************************************************************************************************************************************************************
+ok: [skywalking-ecs-p002.shL.XXXX.net]
+
+TASK [execute for] *************************************************************************************************************************************************************************
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=1) => {
+    "msg": 1
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=2) => {
+    "msg": 2
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=3) => {
+    "msg": 3
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=4) => {
+    "msg": 4
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=5) => {
+    "msg": 5
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=6) => {
+    "msg": 6
+}
+
+PLAY RECAP *********************************************************************************************************************************************************************************
+skywalking-ecs-p002.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+```
+
+
+## with_together
+
+> `with_together`将多个列表的元素**对齐合并**
+
+查看示例
+
+```yaml
+---
+
+- hosts: sw
+  remote_user: root
+  tasks:
+  - name: debug item
+    debug:
+      msg: "{{ item }}"
+    with_together:
+    - [ 1, 2, 3, 4]
+    - [ "a", "b", "c", "d"]
+```
+
+查看执行示例
+
+```shell
+# ansible-playbook -i example.ini test46.yaml -l sw1
+
+PLAY [sw] **********************************************************************************************************************************************************************************
+
+TASK [Gathering Facts] *********************************************************************************************************************************************************************
+ok: [skywalking-ecs-p002.shL.XXXX.net]
+
+TASK [debug item] **************************************************************************************************************************************************************************
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[1, u'a']) => {
+    "msg": [
+        1,
+        "a"
+    ]
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[2, u'b']) => {
+    "msg": [
+        2,
+        "b"
+    ]
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[3, u'c']) => {
+    "msg": [
+        3,
+        "c"
+    ]
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[4, u'd']) => {
+    "msg": [
+        4,
+        "d"
+    ]
+}
+```
+
+将上下两个列表相同项合并在一起了, 如果所合并项在某个列表中缺失，`ansible`会补了一个`null`进去，如下面的例子
+
+```yaml
+
+---
+- hosts: sw
+  remote_user: root
+  tasks:
+  - name: debug item
+    debug:
+      msg: "{{ item }}"
+    with_together:
+    - [ 1, 2, 3, 4]
+    - [ "a", "b", "c", "d"]
+    - [ "x", "y", "z"]   #可以看到 第三个列表，缺失一项，只有三个
+```
+这时候的执行结果就是
+
+```shell
+
+TASK [debug item] **************************************************************************************************************************************************************************
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[1, u'a', u'x']) => {
+    "msg": [
+        1,
+        "a",
+        "x"
+    ]
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[2, u'b', u'y']) => {
+    "msg": [
+        2,
+        "b",
+        "y"
+    ]
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[3, u'c', u'z']) => {
+    "msg": [
+        3,
+        "c",
+        "z"
+    ]
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[4, u'd', None]) => {
+    "msg": [
+        4,
+        "d",
+        null
+    ]
+}
+
+```
