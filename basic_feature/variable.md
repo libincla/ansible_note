@@ -1098,9 +1098,9 @@ sw2
 test_group_var="kafka"
 
 [sw1]
-skywalking-ecs-p002.shL.vevor.net ansible_host=172.21.0.117
+skywalking-ecs-p002.shL.XXXX.net ansible_host=172.21.0.117
 [sw2]
-skywalking-ecs-p003.shL.vevor.net ansible_host=172.21.0.116
+skywalking-ecs-p003.shL.XXXX.net ansible_host=172.21.0.116
 ```
 
 ```shell
@@ -1130,21 +1130,21 @@ skywalking-ecs-p003.shL.XXXX.net | SUCCESS => {
 
 ```shell
 ]# ansible sw2  -i example.ini -m debug -a "msg={{ groups.sw1 }}"
-skywalking-ecs-p003.shL.vevor.net | SUCCESS => {
+skywalking-ecs-p003.shL.XXXX.net | SUCCESS => {
     "msg": [
-        "skywalking-ecs-p002.shL.vevor.net"
+        "skywalking-ecs-p002.shL.XXXX.net"
     ]
 }
 # ansible sw2  -i example.ini -m debug -a "msg={{ groups.sw2 }}"
-skywalking-ecs-p003.shL.vevor.net | SUCCESS => {
+skywalking-ecs-p003.shL.XXXX.net | SUCCESS => {
     "msg": [
-        "skywalking-ecs-p003.shL.vevor.net"
+        "skywalking-ecs-p003.shL.XXXX.net"
     ]
 }
 # ansible sw2  -i example.ini -m debug -a "msg={{ groups['sw1'] }}"
-skywalking-ecs-p003.shL.vevor.net | SUCCESS => {
+skywalking-ecs-p003.shL.XXXX.net | SUCCESS => {
     "msg": [
-        "skywalking-ecs-p002.shL.vevor.net"
+        "skywalking-ecs-p002.shL.XXXX.net"
     ]
 }
 ```
