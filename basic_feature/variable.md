@@ -1150,10 +1150,16 @@ skywalking-ecs-p003.shL.XXXX.net | SUCCESS => {
 ```
 
 6. `group_names`内置变量
-> 通过内置变量`group_names`来获取当前主机所在分组的组名
+> 通过内置变量`group_names`来获取当前主机所在分组的组名, 如果分组存在包含关系，也会输出它的父的组名
 
 
 ```shell
-
+# ansible sw1 -i example.ini -m debug -a "msg={{ group_names }}"
+skywalking-ecs-p002.shL.XXXX.net | SUCCESS => {
+    "msg": [
+        "sw",
+        "sw1"
+    ]
+}
 ```
 7. 
