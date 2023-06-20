@@ -1162,4 +1162,15 @@ skywalking-ecs-p002.shL.XXXX.net | SUCCESS => {
     ]
 }
 ```
-7. 
+
+7. `inventory_dir`内置变量
+   
+> 通过`inventroy_dir`变量获取`ansible`主机资源清单文件的存放目录路径
+
+
+```shell
+# ansible sw1 -i example.ini -m debug -a "msg={{ inventory_dir }}"
+skywalking-ecs-p002.shL.XXXX.net | SUCCESS => {
+    "msg": "/app/ansible"
+}
+```
