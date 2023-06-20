@@ -1085,4 +1085,74 @@ skywalking-ecs-p003.shL.XXXX.net : ok=2    changed=0    unreachable=0    failed=
 ```
 
 ---
-5. 
+5. `groups`内置变量
+
+> groups内置变量可以获取到这个清单资源文件中所有分组的信息
+
+```ini
+[sw:children]
+sw1
+sw2
+
+[sw:vars]
+test_group_var="kafka"
+
+[sw1]
+skywalking-ecs-p002.shL.vevor.net ansible_host=172.21.0.117
+[sw2]
+skywalking-ecs-p003.shL.vevor.net ansible_host=172.21.0.116
+```
+
+```shell
+# ansible sw2  -i example.ini -m debug -a "msg={{ groups }}"
+skywalking-ecs-p003.shL.XXXX.net | SUCCESS => {
+    "msg": {
+        "all": [
+            "skywalking-ecs-p002.shL.XXXX.net",
+            "skywalking-ecs-p003.shL.XXXX.net"
+        ],
+        "sw": [
+            "skywalking-ecs-p002.shL.XXXX.net",
+            "skywalking-ecs-p003.shL.XXXX.net"
+        ],
+        "sw1": [
+            "skywalking-ecs-p002.shL.XXXX.net"
+        ],
+        "sw2": [
+            "skywalking-ecs-p003.shL.XXXX.net"
+        ],
+        "ungrouped": []
+    }
+}
+```
+
+从分组消息看，所有主机都默认被分到了`all`这个组，此外，分组还支持通过`.`或者`['组名']`方式来获取分组姓名，如下
+
+```shell
+]# ansible sw2  -i example.ini -m debug -a "msg={{ groups.sw1 }}"
+skywalking-ecs-p003.shL.vevor.net | SUCCESS => {
+    "msg": [
+        "skywalking-ecs-p002.shL.vevor.net"
+    ]
+}
+# ansible sw2  -i example.ini -m debug -a "msg={{ groups.sw2 }}"
+skywalking-ecs-p003.shL.vevor.net | SUCCESS => {
+    "msg": [
+        "skywalking-ecs-p003.shL.vevor.net"
+    ]
+}
+# ansible sw2  -i example.ini -m debug -a "msg={{ groups['sw1'] }}"
+skywalking-ecs-p003.shL.vevor.net | SUCCESS => {
+    "msg": [
+        "skywalking-ecs-p002.shL.vevor.net"
+    ]
+}
+```
+
+6. `group_names`内置变量
+> 通过内置变量`group_names`来获取当前主机所在分组的组名
+
+```shell
+
+```
+7. 
