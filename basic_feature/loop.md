@@ -606,3 +606,52 @@ ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[u'b', u't3', 3]) => {
     "msg": "first b; second t3; third 3"
 }
 ```
+
+## with_indexed_items
+
+> 它的作用时在循环列表时，为列表每一项添加数字索引
+
+```yaml
+---
+- hosts: sw1
+  remote_user: root
+  tasks:
+  - name: print it
+    debug:
+      msg: "{{ item }}"
+    with_indexed_items:
+    - [ "a", "b", "c", "d" ]
+```
+
+执行
+
+```shell
+TASK [print it] *************************************************************************************************************************************************************************
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[0, u'a']) => {
+    "msg": [
+        0,
+        "a"
+    ]
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[1, u'b']) => {
+    "msg": [
+        1,
+        "b"
+    ]
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[2, u'c']) => {
+    "msg": [
+        2,
+        "c"
+    ]
+}
+ok: [skywalking-ecs-p002.shL.XXXX.net] => (item=[3, u'd']) => {
+    "msg": [
+        3,
+        "d"
+    ]
+}
+
+```
+
+为每一个列表项添加数字
